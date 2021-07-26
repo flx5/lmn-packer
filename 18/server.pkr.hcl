@@ -31,18 +31,8 @@ source "virtualbox-iso" "basic-example" {
             "<esc><esc><enter><wait>",
             "/install/vmlinuz noapic ",
             "initrd=/install/initrd.gz ",
-            "preseed/url=http://10.0.0.2:{{.HTTPPort}}/preseed.cfg ",
-            "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
-            "hostname=server ",
-            "grub-installer/bootdev=/dev/sda<wait> ",
-            "fb=false debconf/frontend=noninteractive ",
-            "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=de ",
-            "keyboard-configuration/variant=de console-setup/ask_detect=false ",
-            "passwd/user-fullname=Linuxadmin ",
-            "passwd/user-password=${var.sudo_password} ",
-            "passwd/user-password-again=${var.sudo_password} ",
-            "passwd/username=linuxadmin ",
-            "-- <enter>"
+            "debian-installer/locale=en_US keymap=us hostname=server ",
+            "preseed/url=http://10.0.0.2:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
   
   boot_wait = "5s"
