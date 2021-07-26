@@ -1,6 +1,6 @@
 image: Ubuntu2004
 
-build_script:
+test_script:
   - packer build server.pkr.hcl
   - ls -lh output-basic-example
 
