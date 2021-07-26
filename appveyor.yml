@@ -1,5 +1,9 @@
 image: Ubuntu2004
 
+init:
+  - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+
+
 test_script:
   - packer --version
   - packer build server.pkr.hcl

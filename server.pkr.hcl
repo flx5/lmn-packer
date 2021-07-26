@@ -58,15 +58,17 @@ build {
       inline = [
          # REQUIRED UNTIL https://ask.linuxmuster.net/t/v7-repo-not-signed/5428/7 is fixed
          "echo ${var.sudo_password} | sudo -S mv /tmp/insecure_apt.txt /etc/apt/apt.conf.d/99insecure",
-         
-         
-         "wget http://pkg.linuxmuster.net/archive.linuxmuster.net.key",
-         "echo ${var.sudo_password} | sudo -S apt-key add archive.linuxmuster.net.key",
-         "rm archive.linuxmuster.net.key",
-         "wget https://archive.linuxmuster.net/lmn7/lmn7-appliance",
-         "chmod +x lmn7-appliance",
-         # TODO lmn7-appliance does hide os.system exit codes...
-         "echo ${var.sudo_password} | sudo -S ./lmn7-appliance -p server -u"
+      ]
+  }
+  
+  provisioner "shell" {
+      script = "install_packages.sh"
+      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
+  }
+  
+  provisioner "shell" {
+      inline = [
+         "echo ${var.sudo_password} | sudo -S linuxmuster-prepare -i -u -p server",
       ]
   }
 }
