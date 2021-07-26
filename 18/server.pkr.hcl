@@ -49,6 +49,8 @@ source "virtualbox-iso" "basic-example" {
   
   http_directory = "18/http"
   ssh_timeout = "10000s"
+  
+  vrdp_bind_address = "0.0.0.0"
 }
 
 build {
