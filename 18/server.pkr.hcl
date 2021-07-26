@@ -55,6 +55,7 @@ build {
       expect_disconnect = true
   
       inline = [
+         "echo 'ENABLED=0' > /etc/default/motd-news",
          "wget https://archive.linuxmuster.net/lmn7/lmn7-appliance",
          "chmod +x lmn7-appliance",
          "./lmn7-appliance -p server -u -l /dev/sdb 2>&1 | tee /root/log.txt",
