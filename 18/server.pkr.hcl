@@ -5,6 +5,11 @@ variable "sudo_password" {
   sensitive = true
 }
 
+variable "headless" {
+  type =  string
+  default = "false"
+}
+
 source "virtualbox-iso" "basic-example" {
   guest_os_type = "Ubuntu_64"
   iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
@@ -13,7 +18,7 @@ source "virtualbox-iso" "basic-example" {
   ssh_password = "${var.sudo_password}"
   shutdown_command = "echo ${var.sudo_password} | sudo -S shutdown -P now"
   guest_additions_mode = "disable"
- # headless = true
+  headless = "${var.headless}"
   
   memory = 1024
   # 25 GB
@@ -31,8 +36,8 @@ source "virtualbox-iso" "basic-example" {
             "hostname=server ",
             "grub-installer/bootdev=/dev/sda<wait> ",
             "fb=false debconf/frontend=noninteractive ",
-            "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
-            "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+            "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=de ",
+            "keyboard-configuration/variant=de console-setup/ask_detect=false ",
             "passwd/user-fullname=Linuxadmin ",
             "passwd/user-password=${var.sudo_password} ",
             "passwd/user-password-again=${var.sudo_password} ",
@@ -50,17 +55,15 @@ build {
   sources = ["sources.virtualbox-iso.basic-example"]
         # Todo disable autoupdate
       # Todo disable cloud-init
-/*
-  provisioner "shell" {
-      script = "install_packages.sh"
-      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
-  }
-  
+
   provisioner "shell" {
       inline = [
-         "echo ${var.sudo_password} | sudo -S linuxmuster-prepare -i -u -p server",
+         "wget https://archive.linuxmuster.net/lmn7/lmn7-appliance",
+         "chmod +x lmn7-appliance",
+         "./lmn7-appliance -p server -u -l /dev/sdb",
       ]
-  }*/
+      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
+  }
 }
 
 
