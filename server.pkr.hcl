@@ -13,6 +13,7 @@ source "virtualbox-iso" "basic-example" {
   ssh_password = "${var.sudo_password}"
   shutdown_command = "echo ${var.sudo_password} | sudo -S shutdown -P now"
   guest_additions_mode = "disable"
+  headless = true
   
   memory = 1024
   # 25 GB
