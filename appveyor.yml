@@ -13,7 +13,6 @@ install:
 # ssh -L 5959:127.0.0.1:RDP_PORT  appveyor@BUILDER_IP -p BUILDER_PORT
 
 test_script:
-  - ip a
   - vboxmanage --version
   - sudo /sbin/vboxconfig
   - vboxmanage --version

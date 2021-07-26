@@ -59,7 +59,9 @@ build {
          "wget https://archive.linuxmuster.net/lmn7/lmn7-appliance",
          "chmod +x lmn7-appliance",
          "./lmn7-appliance -p server -u -l /dev/sdb 2>&1 | tee /root/log.txt",
-         "service sshd restart"
+         
+         # Add timeout in welcome script
+         "sed 's/wget/wget --timeout 1/' -i /etc/profile.d/Z99-linuxmuster.sh"
       ]
       execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
