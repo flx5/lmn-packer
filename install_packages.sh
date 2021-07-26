@@ -2,7 +2,7 @@
 
 set -e
 
-wget http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -
+wget -O- http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -
 wget https://archive.linuxmuster.net/lmn7/lmn7.list -O /etc/apt/sources.list.d/lmn7.list
 apt-get update
 
