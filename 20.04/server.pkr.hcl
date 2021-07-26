@@ -7,15 +7,13 @@ variable "sudo_password" {
 
 source "virtualbox-iso" "basic-example" {
   guest_os_type = "Ubuntu_64"
-  #iso_url = "http://releases.ubuntu.com/20.04/ubuntu-20.04.2-live-server-amd64.iso"
-  #iso_checksum = "sha256:d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423"
-  iso_url = "https://releases.ubuntu.com/18.04.5/ubuntu-18.04.5-live-server-amd64.iso"
-  iso_checksum = "sha256:3756b3201007a88da35ee0957fbe6666c495fb3d8ef2e851ed2bd1115dc36446"
+  iso_url = "http://releases.ubuntu.com/20.04/ubuntu-20.04.2-live-server-amd64.iso"
+  iso_checksum = "sha256:d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423"
   ssh_username = "linuxadmin"
   ssh_password = "${var.sudo_password}"
   shutdown_command = "echo ${var.sudo_password} | sudo -S shutdown -P now"
   guest_additions_mode = "disable"
-#  headless = true
+  headless = true
   
   memory = 1024
   # 25 GB
