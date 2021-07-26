@@ -53,10 +53,6 @@ source "virtualbox-iso" "basic-example" {
   vboxmanage = [
      ["modifyvm", "{{.Name}}", "--natnet1", "10.0.0.0/24"]
   ]
-  
-  # Debug
-  keep_registered = true
-  skip_export = true
 }
 
 build {
