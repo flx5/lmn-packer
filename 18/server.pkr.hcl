@@ -62,6 +62,13 @@ build {
       ]
       execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
+  
+  provisioner "shell" {
+     inline = [
+        "echo done",
+        "date"
+     ]
+  }
 }
 
 
