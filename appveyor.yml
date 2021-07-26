@@ -8,6 +8,8 @@ install:
 
 test_script:
   - vboxmanage --version
+  - sudo /sbin/vboxconfig
+  - vboxmanage --version
   - ./packer --version
   - ./packer build server.pkr.hcl
   - ls -lh output-basic-example
