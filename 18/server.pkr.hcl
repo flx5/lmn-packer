@@ -31,7 +31,7 @@ source "virtualbox-iso" "basic-example" {
             "<esc><esc><enter><wait>",
             "/install/vmlinuz noapic ",
             "initrd=/install/initrd.gz ",
-            "preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+            "preseed/url=http://10.0.0.2:{{.HTTPPort}}/preseed.cfg ",
             "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
             "hostname=server ",
             "grub-installer/bootdev=/dev/sda<wait> ",
@@ -50,7 +50,13 @@ source "virtualbox-iso" "basic-example" {
   http_directory = "18/http"
   ssh_timeout = "10000s"
   
-  vrdp_bind_address = "0.0.0.0"
+  vboxmanage = [
+     ["modifyvm", "{{.Name}}", "--natnet1", "10.0.0.0/24"]
+  ]
+  
+  # Debug
+  keep_registered = true
+  skip_export = true
 }
 
 build {
@@ -59,10 +65,13 @@ build {
       # Todo disable cloud-init
 
   provisioner "shell" {
+      # Network is restarted by linuxmuster-prepare
+      expect_disconnect = true
+  
       inline = [
          "wget https://archive.linuxmuster.net/lmn7/lmn7-appliance",
          "chmod +x lmn7-appliance",
-         "./lmn7-appliance -p server -u -l /dev/sdb",
+         "./lmn7-appliance -p server -u -l /dev/sdb 2>&1 | tee /root/log.txt",
       ]
       execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
