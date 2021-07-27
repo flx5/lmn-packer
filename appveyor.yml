@@ -2,6 +2,8 @@ image: Ubuntu2004
 
 environment:
   APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDB6PprRBGhozT/8yYajVFoHWXfBUfa7ByyJig3OmA/thSeBjtotJ6H5spuaLhgmpRIekwNjEvL1B99aLj/rbpRnyHE8gHMBSN4OwNsfHBz6QhJnbdYaw1Fw751rpVhuua9/HL5mvsmNVfq7r0Vl0fBP6niucdh/j7vdMsE/2cHXMckJGBdnsV/IIgCel4GBmmYHpjwalUXvBW6e8Zdx4aPuXGhfWQvL+5ZI/Nr+G+m/pamBMFhyspmLnBSOBvO9jZgBtnxraQMNi55exWkt6UrjWThSX8DAYv7iCtcvKCwlvE8mo9WL2GqGYj6IQhnd6qncbG8yuuTFaQh84nVG+5x
+  FTP_ACCESS:
+    secure: NZK6Eq+708wvu2fPTCI6F8A0cZxyxrv6YV6jphGNFPs=
 
 install:
   - wget https://releases.hashicorp.com/packer/1.7.4/packer_1.7.4_linux_amd64.zip
@@ -18,10 +20,11 @@ test_script:
   - vboxmanage --version
   - ./packer --version
   - ./packer build -var headless=true 18/server.pkr.hcl
-  
-#artifacts:
-#  - path: 'output-*/*'
-#  - path: 'packer_*'
+  - |
+    if [ "$APPVEYOR_REPO_TAG" = true ]; then 
+      tar cvf "lmn-server-${APPVEYOR_REPO_TAG_NAME}.tar" output-*
+      curl --ciphers 'DEFAULT:!DH'  --ftp-ssl --ftp-create-dirs -k -u "${FTP_ACCESS}" -T "lmn-server-${APPVEYOR_REPO_TAG_NAME}.tar" ftp://ftpupload.net/htdocs/artifacts/
+    fi
 
 
 build: off
