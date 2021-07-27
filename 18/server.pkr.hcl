@@ -10,7 +10,7 @@ variable "headless" {
   default = "false"
 }
 
-source "virtualbox-iso" "basic-example" {
+source "virtualbox-iso" "server" {
   guest_os_type = "Ubuntu_64"
   iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
@@ -31,7 +31,7 @@ source "virtualbox-iso" "basic-example" {
             "<esc><esc><enter><wait>",
             "/install/vmlinuz noapic ",
             "initrd=/install/initrd.gz ",
-            "debian-installer/locale=de_DE keymap=de hostname=server netcfg/choose_interface=enp0s3 ",
+            "debian-installer/locale=en_US keymap=de hostname=server netcfg/choose_interface=enp0s3 ",
             "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
   
@@ -58,7 +58,7 @@ source "virtualbox-iso" "basic-example" {
 }
 
 build {
-  sources = ["sources.virtualbox-iso.basic-example"]
+  sources = ["sources.virtualbox-iso.server"]
         # Todo disable autoupdate
       # Todo disable cloud-init
       

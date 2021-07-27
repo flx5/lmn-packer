@@ -5,7 +5,7 @@ variable "sudo_password" {
   sensitive = true
 }
 
-source "virtualbox-iso" "basic-example" {
+source "virtualbox-iso" "server" {
   guest_os_type = "Ubuntu_64"
   iso_url = "http://releases.ubuntu.com/20.04/ubuntu-20.04.2-live-server-amd64.iso"
   iso_checksum = "sha256:d1f2bf834bbe9bb43faf16f9be992a6f3935e65be0edece1dee2aa6eb1767423"
@@ -46,7 +46,7 @@ source "virtualbox-iso" "basic-example" {
 }
 
 build {
-  sources = ["sources.virtualbox-iso.basic-example"]
+  sources = ["sources.virtualbox-iso.server"]
   
   provisioner "file" {
     source = "workaround/insecure_apt.txt"

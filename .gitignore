@@ -2,3 +2,5 @@
 packer_cache
 output-basic-example
 .vagrant
+
+packer_*
