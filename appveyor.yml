@@ -19,9 +19,9 @@ test_script:
   - ./packer --version
   - ./packer build -var headless=true 18/server.pkr.hcl
   
-artifacts:
-  - path: 'output-*/*'
-  - path: 'packer_*'
+#artifacts:
+#  - path: 'output-*/*'
+#  - path: 'packer_*'
 
 
 build: off
