@@ -11,7 +11,7 @@ install:
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
   - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
   - sudo apt-get install -y vagrant packer qemu-kvm libvirt-daemon-system libvirt-clients vagrant-libvirt ruby-libvirt libvirt-dev
-  - sudo adduser `id -un` libvirtd
+  - sudo adduser `id -un` kvm
   - sudo adduser `id -un` libvirt
   - newgrp libvirt
   - virsh list --all
