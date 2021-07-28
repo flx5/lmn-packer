@@ -10,13 +10,14 @@ environment:
 install:
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
   - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-  - sudo apt-get install vagrant packer
+  - sudo apt-get install -y vagrant packer qemu-kvm libvirt-daemon-system libvirt-clients virtinst
   - curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+  - packer --version
+  - vagrant --version
+  - vagrant plugin install vagrant-libvirt
   - vboxmanage --version
   - sudo /sbin/vboxconfig
   - vboxmanage --version
-  - packer --version
-  - vagrant --version
 
 # To connect to rdp ssh into the builder with
 # ssh -L 5959:127.0.0.1:RDP_PORT  appveyor@BUILDER_IP -p BUILDER_PORT
@@ -38,8 +39,8 @@ for:
         - job_name: Proxmox
         
     build_script:
-      - vagrant up
-      - packer build  -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl
+      - vagrant up -provider libvirt
+      - packer build -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl --provider
       - vagrant ssh -c 'sudo vzdump 201'
       - vagrant ssh-config > /tmp/ssh-config.txt
       - mkdir -p output-proxmox
