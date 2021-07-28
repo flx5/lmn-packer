@@ -8,13 +8,15 @@ environment:
   APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDB6PprRBGhozT/8yYajVFoHWXfBUfa7ByyJig3OmA/thSeBjtotJ6H5spuaLhgmpRIekwNjEvL1B99aLj/rbpRnyHE8gHMBSN4OwNsfHBz6QhJnbdYaw1Fw751rpVhuua9/HL5mvsmNVfq7r0Vl0fBP6niucdh/j7vdMsE/2cHXMckJGBdnsV/IIgCel4GBmmYHpjwalUXvBW6e8Zdx4aPuXGhfWQvL+5ZI/Nr+G+m/pamBMFhyspmLnBSOBvO9jZgBtnxraQMNi55exWkt6UrjWThSX8DAYv7iCtcvKCwlvE8mo9WL2GqGYj6IQhnd6qncbG8yuuTFaQh84nVG+5x
 
 install:
-  - wget https://releases.hashicorp.com/packer/1.7.4/packer_1.7.4_linux_amd64.zip
-  - unzip packer_1.7.4_linux_amd64.zip
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+  - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  - apt-get install vagrant packer
   - curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
   - vboxmanage --version
   - sudo /sbin/vboxconfig
   - vboxmanage --version
-  - ./packer --version
+  - packer --version
+  - vagrant --version
 
 # To connect to rdp ssh into the builder with
 # ssh -L 5959:127.0.0.1:RDP_PORT  appveyor@BUILDER_IP -p BUILDER_PORT
@@ -26,7 +28,7 @@ for:
         - job_name: Virtualbox
         
     build_script:
-      - ./packer build -only=virtualbox-iso.server -var headless=true 18/server.pkr.hcl
+      - packer build -only=virtualbox-iso.server -var headless=true 18/server.pkr.hcl
       - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
       - ls output-* packer_*
 
@@ -36,14 +38,12 @@ for:
         - job_name: Proxmox
         
     build_script:
-      - wget https://releases.hashicorp.com/vagrant/2.2.18/vagrant_2.2.18_linux_amd64.zip -O vagrant.zip
-      - unzip vagrant.zip
-      - ./vagrant up
-      - ./packer build  -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl
-      - ./vagrant ssh -c 'sudo vzdump 201'
-      - ./vagrant ssh-config > /tmp/ssh-config.txt
+      - vagrant up
+      - packer build  -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl
+      - vagrant ssh -c 'sudo vzdump 201'
+      - vagrant ssh-config > /tmp/ssh-config.txt
       - mkdir -p output-proxmox
       - scp -F /tmp/ssh-config.txt default:/var/lib/vz/dump/vzdump-qemu-201* ./output-proxmox/
-      - ./vagrant halt
+      - vagrant halt
       - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
       - ls output-* packer_*
