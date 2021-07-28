@@ -8,9 +8,9 @@ environment:
   APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDB6PprRBGhozT/8yYajVFoHWXfBUfa7ByyJig3OmA/thSeBjtotJ6H5spuaLhgmpRIekwNjEvL1B99aLj/rbpRnyHE8gHMBSN4OwNsfHBz6QhJnbdYaw1Fw751rpVhuua9/HL5mvsmNVfq7r0Vl0fBP6niucdh/j7vdMsE/2cHXMckJGBdnsV/IIgCel4GBmmYHpjwalUXvBW6e8Zdx4aPuXGhfWQvL+5ZI/Nr+G+m/pamBMFhyspmLnBSOBvO9jZgBtnxraQMNi55exWkt6UrjWThSX8DAYv7iCtcvKCwlvE8mo9WL2GqGYj6IQhnd6qncbG8yuuTFaQh84nVG+5x
 
 install:
-  - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
-  - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-  - apt-get install vagrant packer
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+  - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  - sudo apt-get install vagrant packer
   - curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
   - vboxmanage --version
   - sudo /sbin/vboxconfig
