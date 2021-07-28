@@ -5,9 +5,74 @@ variable "sudo_password" {
   sensitive = true
 }
 
+#TODO Template the preseed.cfg so we don't install  qemu-guest-agent on virtualbox
+
 variable "headless" {
   type =  string
   default = "false"
+}
+
+source "proxmox-iso" "server" {
+  proxmox_url = "https://localhost:8006/api2/json"
+  username = "root@pam"
+  password = "vagrant"
+  insecure_skip_tls_verify = true
+  node = "proxmox"
+  
+  vm_id = 201
+  vm_name = "lmn7-server"
+  
+  template_description = "Linuxmuster.net Server Appliance"
+  
+  
+  iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
+  iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
+  iso_storage_pool = "local"
+  memory = 1024
+  
+  os = "l26"
+  
+  disks {
+    storage_pool = "local"
+    storage_pool_type = "directory"
+    disk_size = "25G"
+    format = "qcow2"
+  }
+  
+  disks {
+    storage_pool = "local"
+    storage_pool_type = "directory"
+    disk_size = "100G"
+    format = "qcow2"
+  }
+  
+  unmount_iso = true
+  onboot = true
+  
+  boot_command = [    
+            "<esc><esc><enter><wait>",
+            "/install/vmlinuz noapic ",
+            "initrd=/install/initrd.gz ",
+            "debian-installer/locale=en_US keymap=de hostname=server netcfg/choose_interface=ens18 ",
+            "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
+  ]
+  
+  boot_wait = "20s"
+  
+  http_directory = "18/http"
+  ssh_timeout = "10000s"
+  ssh_username = "linuxadmin"
+  ssh_password = "${var.sudo_password}"
+  
+  # TODO virtio
+  # TODO on proxmox one adapter might be enough.
+  network_adapters {
+    bridge = "vmbr0"
+  }
+  
+  network_adapters {
+    bridge = "vmbr1"
+  }
 }
 
 source "virtualbox-iso" "server" {
@@ -44,6 +109,7 @@ source "virtualbox-iso" "server" {
   #skip_nat_mapping = true
  ## ssh_port = 2234
   
+  # TODO To avoid having an additional nic it might be possible to use an internal network + jumphost + gateway vm
   vboxmanage = [
     ["modifyvm", "{{.Name}}", "--nic2", "nat"],
   #  ["modifyvm", "{{.Name}}", "--intnet2", "internal_lmn"],
@@ -55,6 +121,14 @@ source "virtualbox-iso" "server" {
     ["modifyvm", "{{.Name}}", "--nic1", "none"],
     
   ]
+}
+
+build {
+  # Build a basic box just for test purposes. Would still need to configure network stuff in the below scripts..
+  # TODO For provisioning the qemu-guest-agent package has to be installed during installation on proxmox boxes...
+  sources = [ "sources.proxmox-iso.server"]
+  
+  # Post processors won't work -> have to pull manually from proxmox
 }
 
 build {

@@ -1,24 +1,47 @@
 image: Ubuntu2004
 
 environment:
+  matrix:
+    - job_name: Virtualbox
+    - job_name: Proxmox
+
   APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDB6PprRBGhozT/8yYajVFoHWXfBUfa7ByyJig3OmA/thSeBjtotJ6H5spuaLhgmpRIekwNjEvL1B99aLj/rbpRnyHE8gHMBSN4OwNsfHBz6QhJnbdYaw1Fw751rpVhuua9/HL5mvsmNVfq7r0Vl0fBP6niucdh/j7vdMsE/2cHXMckJGBdnsV/IIgCel4GBmmYHpjwalUXvBW6e8Zdx4aPuXGhfWQvL+5ZI/Nr+G+m/pamBMFhyspmLnBSOBvO9jZgBtnxraQMNi55exWkt6UrjWThSX8DAYv7iCtcvKCwlvE8mo9WL2GqGYj6IQhnd6qncbG8yuuTFaQh84nVG+5x
 
 install:
   - wget https://releases.hashicorp.com/packer/1.7.4/packer_1.7.4_linux_amd64.zip
   - unzip packer_1.7.4_linux_amd64.zip
   - curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
-
-
-# To connect to rdp ssh into the builder with
-# ssh -L 5959:127.0.0.1:RDP_PORT  appveyor@BUILDER_IP -p BUILDER_PORT
-
-test_script:
   - vboxmanage --version
   - sudo /sbin/vboxconfig
   - vboxmanage --version
   - ./packer --version
-  - ./packer build -var headless=true 18/server.pkr.hcl
-  - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
-  - ls output-* packer_*
 
-build: off
+# To connect to rdp ssh into the builder with
+# ssh -L 5959:127.0.0.1:RDP_PORT  appveyor@BUILDER_IP -p BUILDER_PORT
+
+for:
+  -
+    matrix:
+      only:
+        - job_name: Virtualbox-DISABLED
+        
+    build_script:
+      - ./packer build -only=virtualbox-iso.server -var headless=true 18/server.pkr.hcl
+      - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
+      - ls output-* packer_*
+
+  -
+    matrix:
+      only:
+        - job_name: Proxmox
+        
+    build_script:
+      - vagrant up
+      - ./packer build  -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl
+      - vagrant ssh -c 'sudo vzdump 201'
+      - vagrant ssh-config > /tmp/ssh-config.txt
+      - mkdir -p output-proxmox
+      - scp -F /tmp/ssh-config.txt default:/var/lib/vz/dump/vzdump-qemu-201* ./output-proxmox/
+      - vagrant halt
+      - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
+      - ls output-* packer_*

@@ -1,6 +1,6 @@
 *.log
 packer_cache
-output-basic-example
+output-*
 .vagrant
 
 packer_*
