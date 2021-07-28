@@ -11,12 +11,6 @@ install:
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
   - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
   - sudo apt-get install -y vagrant packer qemu-kvm libvirt-daemon-system libvirt-clients vagrant-libvirt ruby-libvirt libvirt-dev
-  - sudo adduser `id -un` kvm
-  - sudo adduser `id -un` libvirt
-  - newgrp libvirt
-  - virsh list --all
-  - service libvirtd status
-  - groups
   - curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
   - packer --version
   - vagrant --version
@@ -47,12 +41,12 @@ for:
         - job_name: Proxmox
         
     build_script:
-      - vagrant up --provider libvirt
+      - sudo vagrant up --provider libvirt
       - packer build -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl --provider
       - vagrant ssh -c 'sudo vzdump 201'
       - vagrant ssh-config > /tmp/ssh-config.txt
       - mkdir -p output-proxmox
       - scp -F /tmp/ssh-config.txt default:/var/lib/vz/dump/vzdump-qemu-201* ./output-proxmox/
-      - vagrant halt
+      - sudo vagrant halt
       - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
       - ls output-* packer_*
