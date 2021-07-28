@@ -87,7 +87,7 @@ Vagrant.configure("2") do |config|
      apt-get update
      mv /tmp/interfaces /etc/network/interfaces
      chown root:root /etc/network/interfaces
-     apt-get install ifupdown2
+     apt-get install -y ifupdown2
      ifreload -a
 
      sed -i "s/.*proxmox/$(hostname -I)\t$(hostname)/" /etc/hosts
