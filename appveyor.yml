@@ -2,7 +2,7 @@ image: Ubuntu2004
 
 environment:
   matrix:
-    - job_name: Virtualbox
+#    - job_name: Virtualbox
     - job_name: Proxmox
 
   APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDB6PprRBGhozT/8yYajVFoHWXfBUfa7ByyJig3OmA/thSeBjtotJ6H5spuaLhgmpRIekwNjEvL1B99aLj/rbpRnyHE8gHMBSN4OwNsfHBz6QhJnbdYaw1Fw751rpVhuua9/HL5mvsmNVfq7r0Vl0fBP6niucdh/j7vdMsE/2cHXMckJGBdnsV/IIgCel4GBmmYHpjwalUXvBW6e8Zdx4aPuXGhfWQvL+5ZI/Nr+G+m/pamBMFhyspmLnBSOBvO9jZgBtnxraQMNi55exWkt6UrjWThSX8DAYv7iCtcvKCwlvE8mo9WL2GqGYj6IQhnd6qncbG8yuuTFaQh84nVG+5x
@@ -23,7 +23,7 @@ for:
   -
     matrix:
       only:
-        - job_name: Virtualbox-DISABLED
+        - job_name: Virtualbox
         
     build_script:
       - ./packer build -only=virtualbox-iso.server -var headless=true 18/server.pkr.hcl
@@ -36,12 +36,14 @@ for:
         - job_name: Proxmox
         
     build_script:
-      - vagrant up
+      - wget https://releases.hashicorp.com/vagrant/2.2.18/vagrant_2.2.18_linux_amd64.zip -O vagrant.zip
+      - unzip vagrant.zip
+      - ./vagrant up
       - ./packer build  -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl
-      - vagrant ssh -c 'sudo vzdump 201'
-      - vagrant ssh-config > /tmp/ssh-config.txt
+      - ./vagrant ssh -c 'sudo vzdump 201'
+      - ./vagrant ssh-config > /tmp/ssh-config.txt
       - mkdir -p output-proxmox
       - scp -F /tmp/ssh-config.txt default:/var/lib/vz/dump/vzdump-qemu-201* ./output-proxmox/
-      - vagrant halt
+      - ./vagrant halt
       - echo "===== These are the artifacts. Can't export them because upload traffic and artifact size is limited. ======"
       - ls output-* packer_*
