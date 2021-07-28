@@ -10,11 +10,12 @@ environment:
 install:
   - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
   - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-  - sudo apt-get install -y vagrant packer qemu-kvm libvirt-bin virtinst bridge-utils
+  - sudo apt-get install -y vagrant packer qemu-kvm libvirt-daemon-system libvirt-clients vagrant-libvirt
   - curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
   - packer --version
   - vagrant --version
-  - vagrant plugin install vagrant-libvirt
+  - vagrant plugin list
+#  - vagrant plugin install vagrant-libvirt
   - vboxmanage --version
   - sudo /sbin/vboxconfig
   - vboxmanage --version
