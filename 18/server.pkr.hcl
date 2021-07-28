@@ -29,6 +29,8 @@ source "proxmox-iso" "server" {
   iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
   iso_storage_pool = "local"
   memory = 1024
+  cpu_type = "host"
+  cores = 2
   
   os = "l26"
   
@@ -53,7 +55,7 @@ source "proxmox-iso" "server" {
             "<esc><esc><enter><wait>",
             "/install/vmlinuz noapic ",
             "initrd=/install/initrd.gz ",
-            "debian-installer/locale=en_US keymap=de hostname=server netcfg/choose_interface=ens18 ",
+            "debian-installer/locale=en_US keymap=de hostname=server ",
             "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
   
@@ -68,10 +70,6 @@ source "proxmox-iso" "server" {
   # TODO on proxmox one adapter might be enough.
   network_adapters {
     bridge = "vmbr0"
-  }
-  
-  network_adapters {
-    bridge = "vmbr1"
   }
 }
 
