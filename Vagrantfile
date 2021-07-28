@@ -84,11 +84,16 @@ Vagrant.configure("2") do |config|
   
   config.vm.provision "file", source: "interfaces", destination: "/tmp/interfaces"
   config.vm.provision "shell", inline: <<-SHELL
+     set -e
      apt-get update
+     
      mv /tmp/interfaces /etc/network/interfaces
      chown root:root /etc/network/interfaces
-     apt-get install -y ifupdown2
+     apt-get install -y ifupdown2 bridge-utils debconf-utils
      ifreload -a
+     
+     echo "postfix postfix/main_mailer_type select No configuration" | debconf-set-selections
+     DEBIAN_FRONTEND=noninteractive apt-get install -y postfix
 
      sed -i "s/.*proxmox/$(hostname -I)\t$(hostname)/" /etc/hosts
      echo "deb [arch=amd64] http://download.proxmox.com/debian/pve buster pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
