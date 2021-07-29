@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/buster64"
   config.vm.hostname = "proxmox"
   
-  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder ".", "/vagrant", disabled: false
   
   # enable nested virtualization
   config.vm.provider "virtualbox" do |vb|
@@ -87,7 +87,11 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "interfaces", destination: "/tmp/interfaces"
   config.vm.provision "shell", inline: <<-SHELL
      set -e
+     
+     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+     apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
      apt-get update
+     apt-get install -y packer
      
      mv /tmp/interfaces /etc/network/interfaces
      chown root:root /etc/network/interfaces

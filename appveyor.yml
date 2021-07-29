@@ -43,7 +43,7 @@ for:
         
     build_script:
       - sudo -u $(id -un) vagrant up --provider libvirt
-      - packer build -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl
+      - vagrant ssh -c 'cd /vagrant && packer build -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl'
       - vagrant ssh -c 'sudo vzdump 201'
       - vagrant ssh-config > /tmp/ssh-config.txt
       - mkdir -p output-proxmox
