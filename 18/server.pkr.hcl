@@ -34,6 +34,7 @@ source "proxmox-iso" "server" {
   
   os = "l26"
   
+  # TODO format seems to be ignored
   disks {
     storage_pool = "local"
     storage_pool_type = "directory"
@@ -69,6 +70,12 @@ source "proxmox-iso" "server" {
   ssh_timeout = "10000s"
   ssh_username = "linuxadmin"
   ssh_password = "${var.sudo_password}"
+  
+  # Need to use the proxmox host as a bastion host in order to reach internal network
+  ssh_bastion_host = "127.0.0.1"
+  ssh_bastion_port = 2322
+  ssh_bastion_username = "vagrant"
+  ssh_bastion_private_key_file = "./.vagrant/machines/default/libvirt/private_key"
   
   # TODO virtio
   # TODO on proxmox one adapter might be enough.
