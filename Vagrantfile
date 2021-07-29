@@ -88,6 +88,9 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
      set -e
      
+     apt-get update
+     apt-get install -y gnupg2
+     
      curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
      apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
      apt-get update
