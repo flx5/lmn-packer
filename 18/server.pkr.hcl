@@ -64,7 +64,7 @@ source "proxmox-iso" "server" {
             "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
   
-  boot_wait = "15s"
+  boot_wait = "10s"
   
   http_directory = "18/http"
   ssh_timeout = "10000s"
