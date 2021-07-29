@@ -15,7 +15,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/buster64"
   config.vm.hostname = "proxmox"
   
-  config.vm.synced_folder ".", "/vagrant", disabled: false
+  config.vm.synced_folder ".", "/vagrant", disabled: false, type: "rsync"
   
   # enable nested virtualization
   config.vm.provider "virtualbox" do |vb|
