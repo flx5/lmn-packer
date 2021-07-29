@@ -15,7 +15,8 @@ Vagrant.configure("2") do |config|
   config.vm.box = "debian/buster64"
   config.vm.hostname = "proxmox"
   
-  config.vm.synced_folder ".", "/vagrant", disabled: false, type: "rsync"
+  config.vm.synced_folder ".", "/vagrant", disabled: false, type: "rsync",
+  	rsync__exclude: [".git", ".vagrant", "output-*", "packer_*"]
   
   # enable nested virtualization
   config.vm.provider "virtualbox" do |vb|
@@ -92,7 +93,7 @@ Vagrant.configure("2") do |config|
      apt-get install -y gnupg2
      
      curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-     apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+     echo "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list
      apt-get update
      apt-get install -y packer
      
