@@ -30,6 +30,7 @@ Vagrant.configure("2") do |config|
     libvirt.nested = true
     libvirt.memory = 4096
     libvirt.cpus = 2
+    libvirt.video_type = "virtio"
   end
 
   # Disable automatic box update checking. If you disable this, then

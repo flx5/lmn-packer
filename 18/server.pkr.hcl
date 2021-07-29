@@ -56,10 +56,14 @@ source "proxmox-iso" "server" {
             "/install/vmlinuz noapic ",
             "initrd=/install/initrd.gz ",
             "debian-installer/locale=en_US keymap=de hostname=server ",
+            "netcfg/disable_autoconfig=true netcfg/get_nameservers=1.1.1.1 ",
+            "netcfg/get_ipaddress=10.0.0.1 netcfg/get_netmask=255.255.255.0 ",
+            "netcfg/get_gateway=10.0.0.254 netcfg/confirm_static=true ",
+            "netcfg/get_domain=linuxmuster.lan ",
             "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
   
-  boot_wait = "20s"
+  boot_wait = "15s"
   
   http_directory = "18/http"
   ssh_timeout = "10000s"
