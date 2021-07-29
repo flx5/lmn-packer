@@ -43,9 +43,9 @@ for:
         
     build_script:
       - sudo -u $(id -un) vagrant up --provider libvirt
-      - vagrant ssh -c 'cd /vagrant && packer build -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl'
-      - vagrant ssh -c 'sudo vzdump 201'
-      - vagrant ssh-config > /tmp/ssh-config.txt
+      - sudo -u $(id -un) vagrant ssh -c 'cd /vagrant && packer build -only=proxmox-iso.server -var headless=true 18/server.pkr.hcl'
+      - sudo -u $(id -un)  vagrant ssh -c 'sudo vzdump 201'
+      - sudo -u $(id -un)  vagrant ssh-config > /tmp/ssh-config.txt
       - mkdir -p output-proxmox
       - scp -F /tmp/ssh-config.txt default:/var/lib/vz/dump/vzdump-qemu-201* ./output-proxmox/
       - sudo -u $(id -un) vagrant halt
