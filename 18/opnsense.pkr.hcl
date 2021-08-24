@@ -10,8 +10,8 @@ variable "opnsense_release" {
 
 source "virtualbox-iso" "opnsense" {
   guest_os_type = "FreeBSD_64"
-  iso_url = "https://ci-01.nyi.hardenedbsd.org/pub/hardenedbsd/12-stable/amd64/amd64/build-517/disc1.iso"
-  iso_checksum = "sha256:f9f98ffef9e4390b1cb9c9555959d95d5b41c9bbc64bc2311a6c388399df37d4"
+  iso_url = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso.xz"
+  iso_checksum = "sha256:a4530246cafbf1dd42a9bd3ea441ca9a78a6a0cd070278cbdf63f3a6f803ecae"
  
   guest_additions_mode = "disable"
   headless = "${var.headless}"
@@ -38,7 +38,7 @@ source "virtualbox-iso" "opnsense" {
   ssh_timeout = "10000s"
   
   ssh_username = "root"
-  ssh_password = "Muster!"
+  ssh_password = "opnsense"
   shutdown_command = "shutdown -p now"
   
 }
