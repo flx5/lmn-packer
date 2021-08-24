@@ -1,0 +1,18 @@
+PARTITIONS="ada0"
+DISTRIBUTIONS="kernel.txz base.txz"
+
+export nonInteractive="YES"
+
+HOSTNAME=opnsense
+
+#!/bin/sh
+sysrc ifconfig_DEFAULT=DHCP
+sysrc sshd_enable=YES
+
+# Change root password
+echo 'Muster!' | pw usermod root -h 0
+
+# Enable root ssh
+sed -i "" -e "s/.*PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config
+
+reboot
