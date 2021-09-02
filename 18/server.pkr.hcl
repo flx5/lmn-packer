@@ -40,9 +40,6 @@ variable "proxmox_disk_format" {
   default = "qcow2"
 }
 
-
-#TODO Template the preseed.cfg so we don't install  qemu-guest-agent on virtualbox
-
 variable "headless" {
   type    = string
   default = "false"

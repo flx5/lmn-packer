@@ -4,3 +4,5 @@ output-*
 .vagrant
 
 packer_*
+
+.idea
