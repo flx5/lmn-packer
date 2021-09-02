@@ -112,7 +112,7 @@ source "proxmox-iso" "server" {
   
   http_directory = "18/http"
   ssh_timeout = "10000s"
-  ssh_username = "linuxadmin"
+  ssh_username = "root"
   ssh_password = "${var.sudo_password}"
   
   # TODO virtio
@@ -126,7 +126,7 @@ source "virtualbox-iso" "server" {
   guest_os_type = "Ubuntu_64"
   iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
-  ssh_username = "linuxadmin"
+  ssh_username = "root"
   ssh_password = "${var.sudo_password}"
   shutdown_command = "echo ${var.sudo_password} | sudo -S shutdown -P now"
   guest_additions_mode = "disable"
@@ -189,9 +189,6 @@ build {
          
          "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
       ]
-      
-      # TODO If we can connect as root this won't be necessary anymore
-      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
 }
 
@@ -220,7 +217,6 @@ build {
          "netplan generate",
          "netplan apply",
       ]
-      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
 
   provisioner "shell" {
@@ -250,9 +246,6 @@ build {
          "rm /etc/netplan/02-packer.yaml",
          "netplan generate"
       ]
-      
-      # TODO If we can connect as root this won't be necessary anymore
-      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
   
   provisioner "shell" {
