@@ -27,6 +27,22 @@ variable "proxmox_node" {
   default = "proxmox"
 }
 
+variable "proxmox_iso_pool" {
+  type =  string
+  default = "local"
+}
+
+variable "proxmox_disk_pool" {
+  type =  string
+  default = "local"
+}
+
+variable "proxmox_disk_pool_type" {
+  type =  string
+  default = "directory"
+}
+
+
 #TODO Template the preseed.cfg so we don't install  qemu-guest-agent on virtualbox
 
 variable "headless" {
@@ -39,7 +55,7 @@ source "proxmox-iso" "server" {
   username = "${var.proxmox_user}"
   password = "${var.proxmox_password}"
   insecure_skip_tls_verify = true
-  node = "proxmox"
+  node = "${var.proxmox_node}"
   
   vm_id = 301
   vm_name = "lmn7-server"
@@ -49,7 +65,7 @@ source "proxmox-iso" "server" {
   
   iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
-  iso_storage_pool = "local"
+  iso_storage_pool = "${var.proxmox_iso_pool}"
   memory = 1024
   cpu_type = "host"
   cores = 2
@@ -58,15 +74,15 @@ source "proxmox-iso" "server" {
   
   # TODO format seems to be ignored
   disks {
-    storage_pool = "local"
-    storage_pool_type = "directory"
+    storage_pool = "${var.proxmox_disk_pool}"
+    storage_pool_type = "${var.proxmox_disk_pool_type}"
     disk_size = "25G"
     format = "qcow2"
   }
   
   disks {
-    storage_pool = "local"
-    storage_pool_type = "directory"
+    storage_pool = "${var.proxmox_disk_pool}"
+    storage_pool_type = "${var.proxmox_disk_pool_type}"
     disk_size = "100G"
     format = "qcow2"
   }
