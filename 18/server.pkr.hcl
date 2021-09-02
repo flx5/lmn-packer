@@ -63,7 +63,7 @@ source "proxmox-iso" "server" {
   insecure_skip_tls_verify = true
   node                     = var.proxmox_node
 
-  vm_id   = 301
+  vm_id   = 401
   vm_name = "lmn7-server"
 
   template_description = "Linuxmuster.net Server Appliance"
