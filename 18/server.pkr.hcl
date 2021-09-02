@@ -55,6 +55,10 @@ locals {
   root_password = "Muster!"
 }
 
+packer {
+  required_version = ">= 1.7.4"
+}
+
 source "proxmox-iso" "server" {
   proxmox_url = "https://${var.proxmox_host}/api2/json"
   username = var.proxmox_user
