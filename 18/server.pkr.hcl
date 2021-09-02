@@ -113,6 +113,11 @@ source "proxmox-iso" "server" {
   boot_wait = "5s"
   
   http_directory = "${path.root}/http"
+  
+  http_content = {
+    "/preseed.cfg" = templatefile("${path.root}/preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [ 'qemu-guest-agent' ] })
+  }
+  
   ssh_timeout = "10000s"
   ssh_username = "root"
   ssh_password = local.root_password
@@ -151,7 +156,10 @@ source "virtualbox-iso" "server" {
   
   boot_wait = "5s"
   
-  http_directory = "${path.root}/http"
+  http_content = {
+    "/preseed.cfg" = templatefile("${path.root}/preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [ ] })
+  }
+  
   ssh_timeout = "10000s"
   
   # TODO Figure out if this can be avoided by using another network type...
@@ -173,6 +181,7 @@ source "virtualbox-iso" "server" {
 }
 
 # TODO Unify build blocks if possible
+# See also https://www.hashicorp.com/blog/using-template-files-with-hashicorp-packer for an example of dynamic source
 build {
   sources = [ "sources.proxmox-iso.server"]
   
