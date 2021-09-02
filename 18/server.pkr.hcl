@@ -138,8 +138,6 @@ source "virtualbox-iso" "server" {
   iso_url       = local.iso_url
   iso_checksum  = local.iso_checksum
 
-  ssh_username         = "root"
-  ssh_password         = local.root_password
   shutdown_command     = "shutdown -P now"
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
@@ -171,9 +169,11 @@ source "virtualbox-iso" "server" {
   ssh_timeout = "10000s"
   skip_nat_mapping = true
   
+  ssh_username         = "root"
+  ssh_password         = local.root_password
   ssh_bastion_host = "10.0.0.1"
   ssh_bastion_username = "root"
-  ssh_bastion_password = "Muster!"
+  ssh_bastion_password = local.root_password
 }
 
 # TODO Unify build blocks if possible
@@ -195,6 +195,7 @@ build {
       "DEBIAN_FRONTEND=noninteractive apt-get install -y  linuxmuster-prepare",
 
       "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
+      "reboot"
     ]
   }
 }
