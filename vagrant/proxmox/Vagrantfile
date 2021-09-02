@@ -1,0 +1,35 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "debian/buster64"
+  config.vm.hostname = "proxmox"
+  
+  config.vm.synced_folder ".", "/vagrant", disabled: false, type: "rsync",
+  	rsync__exclude: [".git", ".vagrant", "output-*", "packer_*"]
+  
+  # enable nested virtualization
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ['modifyvm', :id, '--nested-hw-virt', 'on']
+    vb.customize ["modifyvm", :id, "--vram", "128"]
+    vb.memory = 4096
+    vb.check_guest_additions = false
+    vb.cpus = 2
+  end
+  
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.nested = true
+    libvirt.memory = 4096
+    libvirt.cpus = 2
+    libvirt.video_type = "virtio"
+  end
+
+  config.vm.network "forwarded_port", guest: 8006, host: 8006, host_ip: "127.0.0.1"
+  config.vm.network :forwarded_port, guest: 22, host: 2322, host_ip: "127.0.0.1"
+
+  
+  config.vm.provision "file", source: "interfaces", destination: "/tmp/interfaces"
+  config.vm.provision "shell", path: "install_proxmox.sh"
+  
+end

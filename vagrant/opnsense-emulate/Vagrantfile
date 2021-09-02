@@ -1,0 +1,38 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+INTERNAL_IFACE = ENV.fetch('VBOX_IFACE', 'INVALID')
+
+# The client vm can be used to test the gateway:
+# sudo traceroute -i eth1 example.org -m 4
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/buster64"
+  
+  
+  # Disable default synced folder
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  
+  config.vm.define "gateway" do |gw|
+     gw.vm.network "private_network", ip: "10.0.0.254", name: INTERNAL_IFACE
+
+     gw.vm.provision "shell", inline: <<-SHELL
+        echo 1 >/proc/sys/net/ipv4/ip_forward
+     
+        iptables -A FORWARD -i eth1 -o eth0 -j ACCEPT
+        iptables -A FORWARD -i eth0 -o eth1 -m state --state ESTABLISHED,RELATED -j ACCEPT
+        iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+     SHELL
+
+  end
+
+  config.vm.define "client" do |client|
+     client.vm.network "private_network", ip: "10.0.0.251", name: INTERNAL_IFACE
+     client.vm.provision "shell", inline: <<-SHELL
+        ip route delete default
+        ip route add default via 10.0.0.254
+     SHELL
+  end
+
+
+end
