@@ -170,12 +170,29 @@ source "virtualbox-iso" "server" {
   ]
 }
 
+# TODO Unify build blocks if possible
 build {
-  # Build a basic box just for test purposes. Would still need to configure network stuff in the below scripts..
-  # TODO For provisioning the qemu-guest-agent package has to be installed during installation on proxmox boxes...
   sources = [ "sources.proxmox-iso.server"]
   
-  # Post processors won't work -> have to pull manually from proxmox
+  provisioner "shell" {
+      # Network is restarted by linuxmuster-prepare
+      expect_disconnect = true
+  
+      inline = [
+         "wget -O- http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -",
+         "wget https://archive.linuxmuster.net/lmn7/lmn7.list -O /etc/apt/sources.list.d/lmn7.list",
+         "apt-get clean",
+         "apt-get update",
+         "DEBIAN_FRONTEND=noninteractive apt-get -y purge lxd lxd-client lxcfs lxc-common snapd",
+         "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade",
+         "DEBIAN_FRONTEND=noninteractive apt-get install -y  linuxmuster-prepare",
+         
+         "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
+      ]
+      
+      # TODO If we can connect as root this won't be necessary anymore
+      execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
+  }
 }
 
 build {
@@ -233,6 +250,8 @@ build {
          "rm /etc/netplan/02-packer.yaml",
          "netplan generate"
       ]
+      
+      # TODO If we can connect as root this won't be necessary anymore
       execute_command = "echo ${var.sudo_password} | sudo -S sh -c '{{ .Vars }} {{ .Path }}'"
   }
   

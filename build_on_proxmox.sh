@@ -19,7 +19,7 @@ packer build -only=proxmox-iso.server -var 'proxmox_password=Muster!' -var 'prox
 
 # Dump the VM
 qm set 301 --template 0
-vzdump --compress lzo 301
+vzdump --compress lzo --dumpdir ./dump/ 301
 
 # Cleanup
 qm destroy 301
