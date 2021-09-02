@@ -66,6 +66,7 @@ source "proxmox-iso" "server" {
   vm_name = "lmn7-server"
   
   template_description = "Linuxmuster.net Server Appliance"
+  qemu_agent = "true"
   
   
   iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
