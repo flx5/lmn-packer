@@ -1,42 +1,42 @@
 variable "proxmox_host" {
-  type =  string
+  type    = string
   default = "localhost:8006"
 }
 
 variable "proxmox_user" {
-  type =  string
-  default = "root@pam"
+  type      = string
+  default   = "root@pam"
   sensitive = true
 }
 
 variable "proxmox_password" {
-  type =  string
-  default = "vagrant"
+  type      = string
+  default   = "vagrant"
   sensitive = true
 }
 
 variable "proxmox_node" {
-  type =  string
+  type    = string
   default = "proxmox"
 }
 
 variable "proxmox_iso_pool" {
-  type =  string
+  type    = string
   default = "local"
 }
 
 variable "proxmox_disk_pool" {
-  type =  string
+  type    = string
   default = "local"
 }
 
 variable "proxmox_disk_pool_type" {
-  type =  string
+  type    = string
   default = "directory"
 }
 
 variable "proxmox_disk_format" {
-  type =  string
+  type    = string
   default = "qcow2"
 }
 
@@ -44,14 +44,14 @@ variable "proxmox_disk_format" {
 #TODO Template the preseed.cfg so we don't install  qemu-guest-agent on virtualbox
 
 variable "headless" {
-  type =  string
+  type    = string
   default = "false"
 }
 
 locals {
-  iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
-  iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
-  memory = 4096
+  iso_url       = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
+  iso_checksum  = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
+  memory        = 4096
   root_password = "Muster!"
 }
 
@@ -60,220 +60,220 @@ packer {
 }
 
 source "proxmox-iso" "server" {
-  proxmox_url = "https://${var.proxmox_host}/api2/json"
-  username = var.proxmox_user
-  password = var.proxmox_password
+  proxmox_url              = "https://${var.proxmox_host}/api2/json"
+  username                 = var.proxmox_user
+  password                 = var.proxmox_password
   insecure_skip_tls_verify = true
-  node = var.proxmox_node
-  
-  vm_id = 301
+  node                     = var.proxmox_node
+
+  vm_id   = 301
   vm_name = "lmn7-server"
-  
+
   template_description = "Linuxmuster.net Server Appliance"
-  qemu_agent = "true"
-  
-  iso_url = local.iso_url
-  iso_checksum = local.iso_checksum
+  qemu_agent           = "true"
+
+  iso_url          = local.iso_url
+  iso_checksum     = local.iso_checksum
   iso_storage_pool = "${var.proxmox_iso_pool}"
-  
-  memory = local.memory
+
+  memory   = local.memory
   cpu_type = "host"
-  cores = 2
-  sockets = 2
-  
+  cores    = 2
+  sockets  = 2
+
   os = "l26"
-  
+
   scsi_controller = "virtio-scsi-pci"
-  
+
   disks {
-    storage_pool = "${var.proxmox_disk_pool}"
+    storage_pool      = "${var.proxmox_disk_pool}"
     storage_pool_type = "${var.proxmox_disk_pool_type}"
-    disk_size = "25G"
-    format = var.proxmox_disk_format
+    disk_size         = "25G"
+    format            = var.proxmox_disk_format
   }
-  
+
   disks {
-    storage_pool = var.proxmox_disk_pool
+    storage_pool      = var.proxmox_disk_pool
     storage_pool_type = var.proxmox_disk_pool_type
-    disk_size = "100G"
-    format = var.proxmox_disk_format
+    disk_size         = "100G"
+    format            = var.proxmox_disk_format
   }
-  
+
   unmount_iso = true
-  onboot = true
-  
-  boot_command = [    
-            "<esc><esc><enter><wait>",
-            "/install/vmlinuz noapic ",
-            "initrd=/install/initrd.gz ",
-            "debian-installer/locale=en_US keymap=de hostname=server ",
-            "netcfg/disable_autoconfig=true netcfg/get_nameservers=1.1.1.1 ",
-            "netcfg/get_ipaddress=10.0.0.1 netcfg/get_netmask=255.255.255.0 ",
-            "netcfg/get_gateway=10.0.0.254 netcfg/confirm_static=true ",
-            "netcfg/get_domain=linuxmuster.lan ",
-            "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
+  onboot      = true
+
+  boot_command = [
+    "<esc><esc><enter><wait>",
+    "/install/vmlinuz noapic ",
+    "initrd=/install/initrd.gz ",
+    "debian-installer/locale=en_US keymap=de hostname=server ",
+    "netcfg/disable_autoconfig=true netcfg/get_nameservers=1.1.1.1 ",
+    "netcfg/get_ipaddress=10.0.0.1 netcfg/get_netmask=255.255.255.0 ",
+    "netcfg/get_gateway=10.0.0.254 netcfg/confirm_static=true ",
+    "netcfg/get_domain=linuxmuster.lan ",
+    "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
-  
+
   boot_wait = "5s"
-  
+
   http_content = {
-    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [ "qemu-guest-agent" ] })
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = ["qemu-guest-agent"] })
   }
-  
-  ssh_timeout = "10000s"
+
+  ssh_timeout  = "10000s"
   ssh_username = "root"
   ssh_password = local.root_password
-  
+
   network_adapters {
     bridge = "vmbr1"
-    model = "virtio"
+    model  = "virtio"
   }
 }
 
 source "virtualbox-iso" "server" {
   guest_os_type = "Ubuntu_64"
-  iso_url = local.iso_url
-  iso_checksum = local.iso_checksum
-  
-  ssh_username = "root"
-  ssh_password = local.root_password
-  shutdown_command = "shutdown -P now"
+  iso_url       = local.iso_url
+  iso_checksum  = local.iso_checksum
+
+  ssh_username         = "root"
+  ssh_password         = local.root_password
+  shutdown_command     = "shutdown -P now"
   guest_additions_mode = "disable"
-  headless = "${var.headless}"
-  
+  headless             = "${var.headless}"
+
   memory = local.memory
   # 25 GB
   disk_size = 25600
-  
+
   # 100 GB
-  disk_additional_size = [ 102400 ]
-  
-  boot_command = [    
-            "<esc><esc><enter><wait>",
-            "/install/vmlinuz noapic ",
-            "initrd=/install/initrd.gz ",
-            "debian-installer/locale=en_US keymap=de hostname=server netcfg/choose_interface=enp0s3 ",
-            "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
+  disk_additional_size = [102400]
+
+  boot_command = [
+    "<esc><esc><enter><wait>",
+    "/install/vmlinuz noapic ",
+    "initrd=/install/initrd.gz ",
+    "debian-installer/locale=en_US keymap=de hostname=server netcfg/choose_interface=enp0s3 ",
+    "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
-  
+
   boot_wait = "5s"
-  
+
   http_content = {
-    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [ ] })
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [] })
   }
-  
+
   ssh_timeout = "10000s"
-  
+
   # TODO Figure out if this can be avoided by using another network type...
   #skip_nat_mapping = true
- ## ssh_port = 2234
-  
+  ## ssh_port = 2234
+
   # TODO To avoid having an additional nic it might be possible to use an internal network + jumphost + gateway vm
   vboxmanage = [
     ["modifyvm", "{{.Name}}", "--nic2", "nat"],
-  #  ["modifyvm", "{{.Name}}", "--intnet2", "internal_lmn"],
+    #  ["modifyvm", "{{.Name}}", "--intnet2", "internal_lmn"],
     ["modifyvm", "{{.Name}}", "--natnet2", "10.0.0.0/24"],
-  #  ["modifyvm", "{{.Name}}", "--natpf2", "packerconn,tcp,127.0.0.1,2234,,22"]
+    #  ["modifyvm", "{{.Name}}", "--natpf2", "packerconn,tcp,127.0.0.1,2234,,22"]
   ]
-  
+
   vboxmanage_post = [
     ["modifyvm", "{{.Name}}", "--nic1", "none"],
-    
+
   ]
 }
 
 # TODO Unify build blocks if possible
 # See also https://www.hashicorp.com/blog/using-template-files-with-hashicorp-packer for an example of dynamic source
 build {
-  sources = [ "sources.proxmox-iso.server"]
-  
+  sources = ["sources.proxmox-iso.server"]
+
   provisioner "shell" {
-      # Network is restarted by linuxmuster-prepare
-      expect_disconnect = true
-  
-      inline = [
-         "wget -O- http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -",
-         "wget https://archive.linuxmuster.net/lmn7/lmn7.list -O /etc/apt/sources.list.d/lmn7.list",
-         "apt-get clean",
-         "apt-get update",
-         "DEBIAN_FRONTEND=noninteractive apt-get -y purge lxd lxd-client lxcfs lxc-common snapd",
-         "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade",
-         "DEBIAN_FRONTEND=noninteractive apt-get install -y  linuxmuster-prepare",
-         
-         "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
-      ]
+    # Network is restarted by linuxmuster-prepare
+    expect_disconnect = true
+
+    inline = [
+      "wget -O- http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -",
+      "wget https://archive.linuxmuster.net/lmn7/lmn7.list -O /etc/apt/sources.list.d/lmn7.list",
+      "apt-get clean",
+      "apt-get update",
+      "DEBIAN_FRONTEND=noninteractive apt-get -y purge lxd lxd-client lxcfs lxc-common snapd",
+      "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade",
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y  linuxmuster-prepare",
+
+      "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
+    ]
   }
 }
 
 build {
   sources = ["sources.virtualbox-iso.server"]
-        # Todo disable autoupdate
-      # Todo disable cloud-init
-      
+  # Todo disable autoupdate
+  # Todo disable cloud-init
+
   provisioner "file" {
-    source = "18/02-packer-before.yaml"
+    source      = "18/02-packer-before.yaml"
     destination = "/tmp/02-packer-before.yaml"
   }
-  
+
   provisioner "file" {
-    source = "18/02-packer-after.yaml"
+    source      = "18/02-packer-after.yaml"
     destination = "/tmp/02-packer-after.yaml"
   }
 
   # Initial network configuration
   provisioner "shell" {
-      expect_disconnect = true
-  
-      inline = [
-         "rm /etc/netplan/*.yaml",
-         "mv /tmp/02-packer-before.yaml /etc/netplan/02-packer.yaml",
-         "netplan generate",
-         "netplan apply",
-      ]
+    expect_disconnect = true
+
+    inline = [
+      "rm /etc/netplan/*.yaml",
+      "mv /tmp/02-packer-before.yaml /etc/netplan/02-packer.yaml",
+      "netplan generate",
+      "netplan apply",
+    ]
   }
 
   provisioner "shell" {
-      # Network is restarted by linuxmuster-prepare
-      expect_disconnect = true
-  
-      inline = [
-         "wget -O- http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -",
-         "wget https://archive.linuxmuster.net/lmn7/lmn7.list -O /etc/apt/sources.list.d/lmn7.list",
-         "apt-get clean",
-         "apt-get update",
-         "DEBIAN_FRONTEND=noninteractive apt-get -y purge lxd lxd-client lxcfs lxc-common snapd",
-         "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade",
-         "DEBIAN_FRONTEND=noninteractive apt-get install -y  linuxmuster-prepare",
-         
-         "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
-         
-         # Add timeout in welcome script
-         "sed 's/wget/wget --timeout 1/' -i /etc/profile.d/Z99-linuxmuster.sh",
-         
-         # Fix network to allow packer to reconnect.
-         "mv /tmp/02-packer-after.yaml /etc/netplan/02-packer.yaml",
-         "netplan generate",
-         "netplan apply",
-         
-         # Generate network config for production use but do only apply after reboot.
-         "rm /etc/netplan/02-packer.yaml",
-         "netplan generate"
-      ]
+    # Network is restarted by linuxmuster-prepare
+    expect_disconnect = true
+
+    inline = [
+      "wget -O- http://pkg.linuxmuster.net/archive.linuxmuster.net.key | apt-key add -",
+      "wget https://archive.linuxmuster.net/lmn7/lmn7.list -O /etc/apt/sources.list.d/lmn7.list",
+      "apt-get clean",
+      "apt-get update",
+      "DEBIAN_FRONTEND=noninteractive apt-get -y purge lxd lxd-client lxcfs lxc-common snapd",
+      "DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade",
+      "DEBIAN_FRONTEND=noninteractive apt-get install -y  linuxmuster-prepare",
+
+      "linuxmuster-prepare --initial -u -p server -l /dev/sdb",
+
+      # Add timeout in welcome script
+      "sed 's/wget/wget --timeout 1/' -i /etc/profile.d/Z99-linuxmuster.sh",
+
+      # Fix network to allow packer to reconnect.
+      "mv /tmp/02-packer-after.yaml /etc/netplan/02-packer.yaml",
+      "netplan generate",
+      "netplan apply",
+
+      # Generate network config for production use but do only apply after reboot.
+      "rm /etc/netplan/02-packer.yaml",
+      "netplan generate"
+    ]
   }
-  
+
   provisioner "shell" {
-     inline = [
-        "echo done",
-        "date"
-     ]
+    inline = [
+      "echo done",
+      "date"
+    ]
   }
-  
-  post-processor "checksum" { # checksum image
-    checksum_types = [ "sha512" ] # checksum the artifact
+
+  post-processor "checksum" {   # checksum image
+    checksum_types = ["sha512"] # checksum the artifact
   }
-  
+
   post-processor "vagrant" {
-      keep_input_artifact = true
+    keep_input_artifact = true
   }
 }
 
