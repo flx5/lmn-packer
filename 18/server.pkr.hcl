@@ -1,10 +1,3 @@
-# If this is changed it has to be changed in cidata/user-data too...
-variable "sudo_password" {
-  type =  string
-  default = "Muster!"
-  sensitive = true
-}
-
 variable "proxmox_host" {
   type =  string
   default = "localhost:8006"
@@ -55,12 +48,19 @@ variable "headless" {
   default = "false"
 }
 
+locals {
+  iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
+  iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
+  memory = 4096
+  root_password = 'Muster!'
+}
+
 source "proxmox-iso" "server" {
   proxmox_url = "https://${var.proxmox_host}/api2/json"
-  username = "${var.proxmox_user}"
-  password = "${var.proxmox_password}"
+  username = var.proxmox_user
+  password = var.proxmox_password
   insecure_skip_tls_verify = true
-  node = "${var.proxmox_node}"
+  node = var.proxmox_node
   
   vm_id = 301
   vm_name = "lmn7-server"
@@ -68,11 +68,11 @@ source "proxmox-iso" "server" {
   template_description = "Linuxmuster.net Server Appliance"
   qemu_agent = "true"
   
-  
-  iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
-  iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
+  iso_url = local.iso_url
+  iso_checksum = local.iso_checksum
   iso_storage_pool = "${var.proxmox_iso_pool}"
-  memory = 1024
+  
+  memory = local.memory
   cpu_type = "host"
   cores = 2
   sockets = 2
@@ -81,19 +81,18 @@ source "proxmox-iso" "server" {
   
   scsi_controller = "virtio-scsi-pci"
   
-  # TODO format seems to be ignored
   disks {
     storage_pool = "${var.proxmox_disk_pool}"
     storage_pool_type = "${var.proxmox_disk_pool_type}"
     disk_size = "25G"
-    format = "${var.proxmox_disk_format}"
+    format = var.proxmox_disk_format
   }
   
   disks {
-    storage_pool = "${var.proxmox_disk_pool}"
-    storage_pool_type = "${var.proxmox_disk_pool_type}"
+    storage_pool = var.proxmox_disk_pool
+    storage_pool_type = var.proxmox_disk_pool_type
     disk_size = "100G"
-    format = "${var.proxmox_disk_format}"
+    format = var.proxmox_disk_format
   }
   
   unmount_iso = true
@@ -113,13 +112,11 @@ source "proxmox-iso" "server" {
   
   boot_wait = "5s"
   
-  http_directory = "18/http"
+  http_directory = "${path.root}/http"
   ssh_timeout = "10000s"
   ssh_username = "root"
-  ssh_password = "${var.sudo_password}"
+  ssh_password = local.root_password
   
-  # TODO virtio
-  # TODO on proxmox one adapter might be enough.
   network_adapters {
     bridge = "vmbr1"
     model = "virtio"
@@ -128,15 +125,16 @@ source "proxmox-iso" "server" {
 
 source "virtualbox-iso" "server" {
   guest_os_type = "Ubuntu_64"
-  iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
-  iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
+  iso_url = local.iso_url
+  iso_checksum = local.iso_checksum
+  
   ssh_username = "root"
-  ssh_password = "${var.sudo_password}"
-  shutdown_command = "echo ${var.sudo_password} | sudo -S shutdown -P now"
+  ssh_password = local.root_password
+  shutdown_command = "shutdown -P now"
   guest_additions_mode = "disable"
   headless = "${var.headless}"
   
-  memory = 1024
+  memory = local.memory
   # 25 GB
   disk_size = 25600
   
@@ -153,7 +151,7 @@ source "virtualbox-iso" "server" {
   
   boot_wait = "5s"
   
-  http_directory = "18/http"
+  http_directory = "${path.root}/http"
   ssh_timeout = "10000s"
   
   # TODO Figure out if this can be avoided by using another network type...
