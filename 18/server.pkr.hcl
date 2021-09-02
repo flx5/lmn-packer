@@ -5,6 +5,28 @@ variable "sudo_password" {
   sensitive = true
 }
 
+variable "proxmox_host" {
+  type =  string
+  default = "localhost:8006"
+}
+
+variable "proxmox_user" {
+  type =  string
+  default = "root@pam"
+  sensitive = true
+}
+
+variable "proxmox_password" {
+  type =  string
+  default = "vagrant"
+  sensitive = true
+}
+
+variable "proxmox_node" {
+  type =  string
+  default = "proxmox"
+}
+
 #TODO Template the preseed.cfg so we don't install  qemu-guest-agent on virtualbox
 
 variable "headless" {
@@ -13,13 +35,13 @@ variable "headless" {
 }
 
 source "proxmox-iso" "server" {
-  proxmox_url = "https://localhost:8006/api2/json"
-  username = "root@pam"
-  password = "vagrant"
+  proxmox_url = "https://${var.proxmox_host}/api2/json"
+  username = "${var.proxmox_user}"
+  password = "${var.proxmox_password}"
   insecure_skip_tls_verify = true
   node = "proxmox"
   
-  vm_id = 201
+  vm_id = 301
   vm_name = "lmn7-server"
   
   template_description = "Linuxmuster.net Server Appliance"
