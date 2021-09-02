@@ -117,7 +117,7 @@ source "proxmox-iso" "server" {
   # TODO virtio
   # TODO on proxmox one adapter might be enough.
   network_adapters {
-    bridge = "vmbr0"
+    bridge = "vmbr1"
   }
 }
 
