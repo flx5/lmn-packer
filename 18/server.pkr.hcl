@@ -42,6 +42,11 @@ variable "proxmox_disk_pool_type" {
   default = "directory"
 }
 
+variable "proxmox_disk_format" {
+  type =  string
+  default = "qcow2"
+}
+
 
 #TODO Template the preseed.cfg so we don't install  qemu-guest-agent on virtualbox
 
@@ -77,14 +82,14 @@ source "proxmox-iso" "server" {
     storage_pool = "${var.proxmox_disk_pool}"
     storage_pool_type = "${var.proxmox_disk_pool_type}"
     disk_size = "25G"
-    format = "qcow2"
+    format = "${var.proxmox_disk_format}"
   }
   
   disks {
     storage_pool = "${var.proxmox_disk_pool}"
     storage_pool_type = "${var.proxmox_disk_pool_type}"
     disk_size = "100G"
-    format = "qcow2"
+    format = "${var.proxmox_disk_format}"
   }
   
   unmount_iso = true
