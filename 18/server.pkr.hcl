@@ -52,7 +52,7 @@ locals {
   iso_url = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
   memory = 4096
-  root_password = 'Muster!'
+  root_password = "Muster!"
 }
 
 source "proxmox-iso" "server" {
@@ -115,7 +115,7 @@ source "proxmox-iso" "server" {
   http_directory = "${path.root}/http"
   
   http_content = {
-    "/preseed.cfg" = templatefile("${path.root}/preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [ 'qemu-guest-agent' ] })
+    "/preseed.cfg" = templatefile("${path.root}/preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [ "qemu-guest-agent" ] })
   }
   
   ssh_timeout = "10000s"
