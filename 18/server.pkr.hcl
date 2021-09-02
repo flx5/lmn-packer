@@ -75,8 +75,11 @@ source "proxmox-iso" "server" {
   memory = 1024
   cpu_type = "host"
   cores = 2
+  sockets = 2
   
   os = "l26"
+  
+  scsi_controller = "virtio-scsi-pci"
   
   # TODO format seems to be ignored
   disks {
@@ -119,6 +122,7 @@ source "proxmox-iso" "server" {
   # TODO on proxmox one adapter might be enough.
   network_adapters {
     bridge = "vmbr1"
+    model = "virtio"
   }
 }
 
