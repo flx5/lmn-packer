@@ -136,7 +136,7 @@ build {
       boot_command = [
         "<esc><wait>",
         "boot -s<wait>",
-        "<enter><wait10>",
+        "<enter><wait10><wait10>",
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",
