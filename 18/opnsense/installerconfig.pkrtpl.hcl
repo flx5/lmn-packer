@@ -1,4 +1,4 @@
-PARTITIONS="ada0"
+PARTITIONS="${partitions}"
 DISTRIBUTIONS="kernel.txz base.txz"
 
 export nonInteractive="YES"

@@ -15,6 +15,7 @@ locals {
       wan_subnet  = ""
       wan_gateway = ""
       wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface em0<enter><wait10>"
+      partitions = "ada0"
     }
 
     "proxmox-iso.opnsense" = {
@@ -27,6 +28,7 @@ locals {
       wan_subnet  = "28"
       wan_gateway = "192.168.10.1"
       wan_configure = "ifconfig vtnet0 inet 192.168.10.11/28 && route add default 192.168.10.1<enter><wait10>"
+      partitions = "da0"
     }
   }
 }
@@ -155,7 +157,7 @@ build {
           wan_subnet   = source.value.wan_subnet,
           wan_gateway  = source.value.wan_gateway
         }),
-        "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { root_pw = local.root_password, wan_iface = source.value.wan_iface, lan_iface = source.value.lan_iface })
+        "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { root_pw = local.root_password, wan_iface = source.value.wan_iface, lan_iface = source.value.lan_iface, partitions =  source.value.partitions})
       }
     }
   }
