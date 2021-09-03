@@ -229,7 +229,7 @@
       <descr><![CDATA[System Administrator]]></descr>
       <scope>system</scope>
       <groupname>admins</groupname>
-      <password>$2y$10$YRVoF4SgskIsrXOvOQjGieB9XqHPRra9R7d80B3BZdbY/j21TwBfS</password>
+      <password>${root_pw_hash}</password>
       <uid>0</uid>
     </user>
     <nextuid>2000</nextuid>
@@ -272,7 +272,7 @@
   <interfaces>
     <wan>
       <enable>1</enable>
-      <if>em0</if>
+      <if>${wan_iface}</if>
       <mtu/>
       <ipaddr>dhcp</ipaddr>
       <ipaddrv6>dhcp6</ipaddrv6>
@@ -287,8 +287,8 @@
     </wan>
     <lan>
       <enable>1</enable>
-      <if>em1</if>
-      <ipaddr>192.168.1.1</ipaddr>
+      <if>${lan_iface}</if>
+      <ipaddr>10.0.0.254</ipaddr>
       <subnet>24</subnet>
       <ipaddrv6>track6</ipaddrv6>
       <subnetv6>64</subnetv6>
@@ -302,8 +302,8 @@
     <lan>
       <enable/>
       <range>
-        <from>192.168.1.100</from>
-        <to>192.168.1.199</to>
+        <from>10.0.0.100</from>
+        <to>10.0.0.199</to>
       </range>
     </lan>
   </dhcpd>

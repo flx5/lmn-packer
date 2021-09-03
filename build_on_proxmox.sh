@@ -15,7 +15,7 @@ fi
 
 
 # Build the VM
-packer build -only=proxmox-iso.server -var 'proxmox_password=Muster!' -var 'proxmox_node=pve' -var 'proxmox_disk_pool=vd-hdd-1400' -var 'proxmox_disk_pool_type=lvm-thin' -var 'proxmox_disk_format=raw' 18/server.pkr.hcl
+packer build -only=proxmox-iso.server -var 'proxmox_password=Muster!' -var 'proxmox_node=pve' -var 'proxmox_disk_pool=vd-hdd-1400' -var 'proxmox_disk_pool_type=lvm-thin' -var 'proxmox_disk_format=raw' 18
 
 # Dump the VM
 qm set 401 --template 0
