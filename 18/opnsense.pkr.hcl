@@ -28,7 +28,7 @@ source "proxmox-iso" "opnsense" {
   insecure_skip_tls_verify = true
   node                     = var.proxmox_node
 
-  vm_id   = 401
+  vm_id   = 400
   vm_name = "lmn7-opnsense"
 
   template_description = "Linuxmuster.net OPNSense Appliance"
