@@ -8,16 +8,24 @@ locals {
 
   sources = {
     "virtualbox-iso.opnsense" = {
-      wan_iface = "em0"
-      lan_iface = "em1"
-      packages  = "os-virtualbox"
+      wan_iface   = "em0"
+      lan_iface   = "em1"
+      packages    = "os-virtualbox"
+      wan_ip      = "dhcp"
+      wan_subnet  = ""
+      wan_gateway = ""
     }
-  
-     "proxmox-iso.opnsense" = {
-        wan_iface = "vtnet0"
-        lan_iface = "vtnet1"
-        packages = "os-qemu-guest-agent"
-     }
+
+    "proxmox-iso.opnsense" = {
+      wan_iface = "vtnet0"
+      lan_iface = "vtnet1"
+      packages  = "os-qemu-guest-agent"
+
+      # TODO Is this the default for the templates?
+      wan_ip      = "192.168.10.11"
+      wan_subnet  = "28"
+      wan_gateway = "192.168.10.1"
+    }
   }
 }
 
@@ -34,8 +42,8 @@ source "proxmox-iso" "opnsense" {
   template_description = "Linuxmuster.net OPNSense Appliance"
   qemu_agent           = "true"
 
-  iso_url      = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
-  iso_checksum = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
+  iso_url          = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
+  iso_checksum     = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
   iso_storage_pool = "${var.proxmox_iso_pool}"
 
   # TODO Correct memory / disk size
@@ -137,7 +145,14 @@ build {
       ]
 
       http_content = {
-        "/config.xml"      = templatefile("opnsense/config.xml", { root_pw_hash = bcrypt(local.root_password), wan_iface = source.value.wan_iface, lan_iface = source.value.lan_iface }),
+        "/config.xml" = templatefile("opnsense/config.xml", {
+          root_pw_hash = bcrypt(local.root_password),
+          wan_iface    = source.value.wan_iface,
+          lan_iface    = source.value.lan_iface,
+          wan_ip       = source.value.wan_ip,
+          wan_subnet   = source.value.wan_subnet,
+          wan_gateway  = source.value.wan_gateway
+        }),
         "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { root_pw = local.root_password, wan_iface = source.value.wan_iface, lan_iface = source.value.lan_iface })
       }
     }
