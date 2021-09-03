@@ -14,6 +14,7 @@ locals {
       wan_ip      = "dhcp"
       wan_subnet  = ""
       wan_gateway = ""
+      wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface em0<enter><wait10>"
     }
 
     "proxmox-iso.opnsense" = {
@@ -25,6 +26,7 @@ locals {
       wan_ip      = "192.168.10.11"
       wan_subnet  = "28"
       wan_gateway = "192.168.10.1"
+      wan_configure = "ifconfig vtnet0 inet 192.168.10.11/28 && route add default 192.168.10.1<enter><wait10>"
     }
   }
 }
@@ -140,7 +142,7 @@ build {
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",
-        "dhclient -l /tmp/dhclient.lease.wan_iface ${source.value.wan_iface}<enter><wait10>",
+        source.value.wan_configure,
         "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
       ]
 
