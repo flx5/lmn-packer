@@ -71,7 +71,7 @@ d-i pkgsel/update-policy select none
 # No inital updates
 d-i pkgsel/upgrade select none
 
-d-i pkgsel/include string %{ for install in installs ~}${install} %{ endfor } openssh-server gnupg lvm2 qemu-guest-agent
+d-i pkgsel/include string %{ for install in installs ~}${install} %{ endfor } openssh-server gnupg lvm2
 d-i pkgsel/install-language-support boolean false
 
 ### Boot loader installation
