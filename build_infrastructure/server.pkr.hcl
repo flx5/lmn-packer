@@ -94,7 +94,7 @@ build {
        "curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -"
        "echo 'deb [arch=amd64] https://apt.releases.hashicorp.com bullseye main' > /etc/apt/sources.list.d/packer.list",
        "apt-get update",
-       "apt-get install -y packer"
+       "apt-get install -y packer sudo"
     ]
   }
   
@@ -103,6 +103,11 @@ build {
        "adduser --system github"
     ]
   }
+  
+  provisioner "file" {
+  source = "sudoers"
+  destination = "/etc/sudoers.d/github"
+}
   
   provisioner "shell" {
     execute_command = "chmod +x {{ .Path }}; {{ .Vars }} su -s {{ .Path }} github"

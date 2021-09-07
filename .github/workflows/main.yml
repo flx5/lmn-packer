@@ -27,4 +27,9 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Build OPNSense
-        run: packer build -only=proxmox-iso.opnsense -var 'proxmox_password=Muster!' -var 'proxmox_node=proxmox' -var 'proxmox_disk_pool=local' -var 'proxmox_disk_pool_type=directory' -var 'proxmox_disk_format=raw' 18
+        run:
+           packer build -only=proxmox-iso.opnsense -var 'proxmox_password=Muster!' -var 'proxmox_node=proxmox' -var 'proxmox_disk_pool=local' -var 'proxmox_disk_pool_type=directory' -var 'proxmox_disk_format=raw' 18
+           
+      - name: Cleanup
+        run: |
+          sudo rm /var/lib/vz/template/iso/*
