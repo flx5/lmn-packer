@@ -25,7 +25,6 @@ d-i clock-setup/utc boolean true
 d-i time/zone string Europe/Berlin
 
 ### Partitioning
-d-i partman-auto/disk string /dev/sda
 d-i partman-auto/method string regular
 
 d-i partman-auto/choose_recipe select atomic
@@ -50,7 +49,7 @@ d-i pkgsel/update-policy select none
 # No inital updates
 d-i pkgsel/upgrade select none
 
-d-i pkgsel/include string %{ for install in installs ~}${install} %{ endfor } openssh-server
+d-i pkgsel/include string %{ for install in installs ~}${install} %{ endfor } openssh-server ifupdown2
 d-i pkgsel/install-language-support boolean false
 
 ### Boot loader installation
