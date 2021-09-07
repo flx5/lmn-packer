@@ -274,10 +274,10 @@
       <enable>1</enable>
       <if>${wan_iface}</if>
       <mtu/>
-      <ipaddr>${wan_ip}</ipaddr>
+      <ipaddr>dhcp</ipaddr>
       <ipaddrv6>dhcp6</ipaddrv6>
-      <subnet>${wan_subnet}</subnet>
-      <gateway>${wan_gateway}</gateway>
+      <subnet/>
+      <gateway/>
       <blockpriv>1</blockpriv>
       <blockbogons>1</blockbogons>
       <dhcphostname/>

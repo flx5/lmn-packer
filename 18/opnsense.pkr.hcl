@@ -11,9 +11,6 @@ locals {
       wan_iface   = "em0"
       lan_iface   = "em1"
       packages    = "os-virtualbox"
-      wan_ip      = "dhcp"
-      wan_subnet  = ""
-      wan_gateway = ""
       wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface em0<enter><wait10>"
       partitions = "ada0"
     }
@@ -23,11 +20,7 @@ locals {
       lan_iface = "vtnet1"
       packages  = "os-qemu-guest-agent"
 
-      # TODO Is this the default for the templates?
-      wan_ip      = "192.168.10.11"
-      wan_subnet  = "28"
-      wan_gateway = "192.168.10.1"
-      wan_configure = "ifconfig vtnet0 inet 192.168.10.11/28 && route add default 192.168.10.1<enter><wait10>"
+      wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface vtnet0<enter><wait10>"
       partitions = "da0"
     }
   }
@@ -152,10 +145,7 @@ build {
         "/config.xml" = templatefile("opnsense/config.xml", {
           root_pw_hash = bcrypt(local.root_password),
           wan_iface    = source.value.wan_iface,
-          lan_iface    = source.value.lan_iface,
-          wan_ip       = source.value.wan_ip,
-          wan_subnet   = source.value.wan_subnet,
-          wan_gateway  = source.value.wan_gateway
+          lan_iface    = source.value.lan_iface
         }),
         "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { root_pw = local.root_password, wan_iface = source.value.wan_iface, lan_iface = source.value.lan_iface, partitions =  source.value.partitions})
       }
