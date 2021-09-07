@@ -1,7 +1,7 @@
 # This is a basic workflow to help you get started with Actions
 
 name: CI
-concurrent: vm_host
+concurrency: vm_host
 
 env:
   VM_ID: 102
