@@ -33,6 +33,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r tools/proxmoxer/requirements.txt
     - name: Start VM
+      env:
+        PROXMOX_HOST: ${{ secrets.PROXMOX_HOST }}
+        PROXMOX_USER: ${{ secrets.PROXMOX_USER }}
+        PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
       run: |
         python ./tools/proxmoxer/manage-vm.py --node pve --vm $VM_ID start
 
@@ -86,5 +90,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r tools/proxmoxer/requirements.txt
     - name: Stop VM
+      env:
+        PROXMOX_HOST: ${{ secrets.PROXMOX_HOST }}
+        PROXMOX_USER: ${{ secrets.PROXMOX_USER }}
+        PROXMOX_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}
       run: |
         python ./tools/proxmoxer/manage-vm.py --node pve --vm $VM_ID shutdown
