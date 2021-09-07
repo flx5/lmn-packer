@@ -67,6 +67,7 @@ source "proxmox-iso" "opnsense" {
   boot_wait = "5s"
 
   ssh_timeout  = "10000s"
+  ssh_host         = "10.0.0.254"
   ssh_username = "root"
   ssh_password = local.root_password
 
@@ -133,7 +134,8 @@ build {
       boot_command = [
         "<esc><wait>",
         "boot -s<wait>",
-        "<enter><wait10><wait10>",
+        # Wait for 60  seconds just to be sure (on nested virtualization this is slow...)
+        "<enter><wait60>",
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",

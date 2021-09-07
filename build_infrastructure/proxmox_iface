@@ -30,4 +30,7 @@ iface vmbr0 inet static
 
 auto vmbr1
 iface vmbr1 inet static
-       bridge-ports none
+       address 10.0.0.253/24
+       bridge-ports none 
+       bridge-stp off
+       bridge-fd 0
