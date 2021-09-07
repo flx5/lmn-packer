@@ -33,7 +33,7 @@ source "proxmox-iso" "opnsense" {
   insecure_skip_tls_verify = true
   node                     = var.proxmox_node
 
-  vm_id   = 400
+  vm_id   = 200
   vm_name = "lmn7-opnsense"
 
   template_description = "Linuxmuster.net OPNSense Appliance"
@@ -175,6 +175,18 @@ build {
 
     inline = [
       "pkg install -y ${local.sources["${source.type}.${source.name}"].packages}"
+    ]
+  }
+
+  provisioner "shell" {
+    only = [ "proxmox-iso.opnsense" ]
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+
+    inline = [
+      "echo 'qemu_guest_agent_enable=\"YES\"' >> /etc/rc.conf",
+      "echo 'qemu_guest_agent_flags=\"-d -v -l /var/log/qemu-ga.log\"' >> /etc/rc.conf",
+      "service qemu-guest-agent start"
     ]
   }
 

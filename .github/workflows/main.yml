@@ -1,6 +1,10 @@
 # This is a basic workflow to help you get started with Actions
 
 name: CI
+concurrent: vm_host
+
+env:
+  VM_ID: 102
 
 # Controls when the workflow will run
 on:
@@ -15,8 +19,26 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tools/proxmoxer/requirements.txt
+    - name: Start VM
+      run: |
+        python ./tools/proxmoxer/manage-vm.py --node pve --vm $VM_ID start
+
   # This workflow contains a single job called "build"
   build:
+    needs: setup
     # The type of runner that the job will run on
     runs-on: [self-hosted, proxmox]
 
@@ -29,8 +51,40 @@ jobs:
       - name: Build OPNSense
         run:
            packer build -only=proxmox-iso.opnsense -var 'proxmox_password=Muster!' -var 'proxmox_node=proxmox' -var 'proxmox_disk_pool=local' -var 'proxmox_disk_pool_type=directory' -var 'proxmox_disk_format=raw' 18
+      - name: Unmark template
+        run: qm set 200 --template 0
+        
+      - name: Export OPNSense
+        run: |
+          mkdir -p dump
+          vzdump --compress lzo --dumpdir ./dump/ 200
+          
+          # TODO UPLOAD TO FILESERVER
+          
            
       - name: Cleanup
         if: ${{ always() }}
         run: |
+          qm destroy 200
           sudo rm /var/lib/vz/template/iso/*
+          
+          
+  teardown:
+    runs-on: ubuntu-latest
+    
+    if: always()
+    needs: build
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r tools/proxmoxer/requirements.txt
+    - name: Stop VM
+      run: |
+        python ./tools/proxmoxer/manage-vm.py --node pve --vm $VM_ID shutdown
