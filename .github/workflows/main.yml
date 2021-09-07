@@ -31,5 +31,6 @@ jobs:
            packer build -only=proxmox-iso.opnsense -var 'proxmox_password=Muster!' -var 'proxmox_node=proxmox' -var 'proxmox_disk_pool=local' -var 'proxmox_disk_pool_type=directory' -var 'proxmox_disk_format=raw' 18
            
       - name: Cleanup
+        if: ${{ always() }}
         run: |
           sudo rm /var/lib/vz/template/iso/*

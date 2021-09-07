@@ -157,6 +157,7 @@ build {
   provisioner "shell" {
     # FreeBSD uses tcsh
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+    expect_disconnect = true
 
     inline = [
       "env ASSUME_ALWAYS_YES=YES pkg install ca_root_nss",
