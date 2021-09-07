@@ -69,7 +69,7 @@ jobs:
       - name: Cleanup
         if: ${{ always() }}
         run: |
-          qm destroy 200
+          sudo qm destroy 200
           sudo rm /var/lib/vz/template/iso/*
           
           
