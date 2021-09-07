@@ -11,6 +11,7 @@ locals {
     proxmox = {
        ip = "192.168.10.13"
        hostname = "proxmox"
+       vm_id = 500
     }
   }
 }
@@ -75,6 +76,7 @@ build {
      labels = ["source.proxmox-iso.base-debian"]
      
      content {
+        vm_id = source.value.vm_id
         name = source.key
           vm_name = source.key
           boot_command = [
@@ -91,9 +93,9 @@ build {
   
   provisioner "shell" {
     inline = [
-       "curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -"
-       "echo 'deb [arch=amd64] https://apt.releases.hashicorp.com bullseye main' > /etc/apt/sources.list.d/packer.list",
-       "apt-get update",
+       "apt-get install -y lsb-release curl software-properties-common gnupg2",
+       "curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -",
+       "apt-add-repository \"deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main\"",
        "apt-get install -y packer sudo"
     ]
   }
@@ -115,8 +117,8 @@ build {
        "cd /home/github",
        "mkdir actions-runner && cd actions-runner",
        "curl -o actions-runner-linux-x64-2.281.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.281.1/actions-runner-linux-x64-2.281.1.tar.gz",
-       "echo "04f6c17235d4b29fc1392d5fae63919a96e7d903d67790f81cffdd69c58cb563  actions-runner-linux-x64-2.281.1.tar.gz" | shasum -a 256 -c",
-       "tar xzf ./actions-runner-linux-x64-2.281.1.tar.gz"
+       "echo '04f6c17235d4b29fc1392d5fae63919a96e7d903d67790f81cffdd69c58cb563  actions-runner-linux-x64-2.281.1.tar.gz' | shasum -a 256 -c",
+       "tar xzf ./actions-runner-linux-x64-2.281.1.tar.gz",
        "./config.sh --unattended --labels proxmox --url https://github.com/flx5/lmn-packer --token ${var.github_token}"
     ]
   }
