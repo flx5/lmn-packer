@@ -24,4 +24,3 @@ packer build -only=proxmox-iso.proxmox  -var 'proxmox_password=Muster!' -var 'pr
 
 
 qm clone 500 600 -full 0 -name proxmox-runner
-qm start 600
