@@ -24,6 +24,6 @@ su github -s /bin/bash <<'EOF'
        payload=$(curl -sX POST -H "Authorization: token ${GITHUB_PAT}" ${registration_url})
        RUNNER_TOKEN=$(echo $payload | jq .token --raw-output)
     
-       ./config.sh --unattended --name $(hostname) --replace --url https://github.com/${GITHUB_OWNER}/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN}
+       ./config.sh --unattended --labels ${GITHUB_LABEL} --replace --url https://github.com/${GITHUB_OWNER}/${GITHUB_REPOSITORY} --token ${RUNNER_TOKEN}
        sudo ./svc.sh install github
 EOF

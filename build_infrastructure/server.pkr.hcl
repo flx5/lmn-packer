@@ -108,7 +108,8 @@ build {
     environment_vars = [
       "GITHUB_OWNER=${var.github_owner}",
       "GITHUB_REPOSITORY=${var.github_repository}",
-      "GITHUB_PAT=${var.github_token}"
+      "GITHUB_PAT=${var.github_token}",
+      "GITHUB_LABEL=${source.name}"
     ]
   }
 
