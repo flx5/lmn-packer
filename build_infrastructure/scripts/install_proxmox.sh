@@ -37,7 +37,7 @@ cat << EOF >> /etc/network/interfaces
 # Wan interface for OPNSense
 auto vmbr0
 iface vmbr0 inet static
-        address ${WAN_ADDRESS}
+        address ${WAN_ADDRESS}/24
         bridge-ports none
         bridge-stp off
         bridge-fd 0
