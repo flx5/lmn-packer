@@ -43,8 +43,8 @@ iface vmbr0 inet static
         bridge-fd 0
 
         post-up   echo 1 > /proc/sys/net/ipv4/ip_forward
-        post-up   iptables -t nat -A POSTROUTING -s '${WAN_ADDRESS}' -o ${DEFAULT_IFACE} -j MASQUERADE
-        post-down iptables -t nat -D POSTROUTING -s '${WAN_ADDRESS}' -o ${DEFAULT_IFACE} -j MASQUERADE
+        post-up   iptables -t nat -A POSTROUTING -s '${WAN_ADDRESS}/24' -o ${DEFAULT_IFACE} -j MASQUERADE
+        post-down iptables -t nat -D POSTROUTING -s '${WAN_ADDRESS}/24' -o ${DEFAULT_IFACE} -j MASQUERADE
 
 # Lan interface for OPNSense
 auto vmbr1
