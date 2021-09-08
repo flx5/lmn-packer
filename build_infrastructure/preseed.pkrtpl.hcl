@@ -49,7 +49,7 @@ d-i pkgsel/update-policy select none
 # No inital updates
 d-i pkgsel/upgrade select none
 
-d-i pkgsel/include string %{ for install in installs ~}${install} %{ endfor } openssh-server ifupdown2
+d-i pkgsel/include string %{ for install in installs ~}${install} %{ endfor } openssh-server ifupdown2 gnupg2 sudo lsb-release
 d-i pkgsel/install-language-support boolean false
 
 ### Boot loader installation
