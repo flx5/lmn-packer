@@ -12,7 +12,7 @@ apt-get install -y jq curl
 su github -s /bin/bash <<'EOF'
        cd /home/github
        
-       RUNNERS=$(curl -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOSITORY}/actions/runners/downloads)
+       RUNNERS=$(curl -H "Authorization: token ${GITHUB_PAT}" https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPOSITORY}/actions/runners/downloads)
        RUNNER_URL=$(jq --raw-output '.[] | select(.os == "linux" and .architecture == "x64").download_url' <<< $RUNNERS)
        
        curl -Ls "$RUNNER_URL" | tar xz
