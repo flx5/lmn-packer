@@ -1,7 +1,7 @@
 locals {
   iso_url       = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-11.0.0-amd64-netinst.iso"
   iso_checksum  = "sha512:5f6aed67b159d7ccc1a90df33cc8a314aa278728a6f50707ebf10c02e46664e383ca5fa19163b0a1c6a4cb77a39587881584b00b45f512b4a470f1138eaa1801"
-  memory        = 8192
+  memory        = 16384
   root_password = "Muster!"
   netmask       = "255.255.255.240"
   gateway       = "192.168.10.1"
@@ -56,7 +56,7 @@ source "proxmox-iso" "base-debian" {
   disks {
     storage_pool      = "${var.proxmox_disk_pool}"
     storage_pool_type = "${var.proxmox_disk_pool_type}"
-    disk_size         = "25G"
+    disk_size         = "500G"
     format            = var.proxmox_disk_format
   }
 

@@ -16,7 +16,7 @@ if qm status 600 > /dev/null 2>&1; then
 fi
 
 
-screen -L packer build -only=proxmox-iso.proxmox  -var 'proxmox_password=Muster!' -var 'proxmox_node=pve' \
+packer build -only=proxmox-iso.proxmox  -var 'proxmox_password=Muster!' -var 'proxmox_node=pve' \
      -var 'proxmox_disk_pool=vd-hdd-1400' -var 'proxmox_disk_pool_type=lvm-thin' -var 'proxmox_disk_format=raw' \
      -var 'github_owner=flx5' -var 'github_repository=lmn-packer' \
      .
