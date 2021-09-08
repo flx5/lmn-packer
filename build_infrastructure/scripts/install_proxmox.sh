@@ -69,6 +69,6 @@ cat << EOF > /etc/dhcp/dhcpd.conf
 subnet ${WAN_PREFIX}.0 netmask 255.255.255.0 {
   range ${WAN_PREFIX}.10 ${WAN_PREFIX}.20;
   option routers ${WAN_ADDRESS};
-  option domain-name-servers ${WAN_ADDRESS};
+  option domain-name-servers ${NAMESERVER};
 }
 EOF

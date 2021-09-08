@@ -118,7 +118,8 @@ build {
     script = "scripts/install_proxmox.sh"
     expect_disconnect = true
     environment_vars = [
-       "WAN_PREFIX=${local.builds[source.name].wan_prefix}"
+       "WAN_PREFIX=${local.builds[source.name].wan_prefix}",
+       "NAMESERVER=${local.nameserver}"
     ]
   }
 }
