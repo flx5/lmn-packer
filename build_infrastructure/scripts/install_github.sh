@@ -7,7 +7,7 @@ adduser --system github
 
 echo 'github ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/github
 
-apt-get install -y jq
+apt-get install -y jq curl
 
 su github -s /bin/bash <<'EOF'
        cd /home/github
