@@ -1,3 +1,5 @@
+# TODO The network configuration is very specific to the reference build system...
+
 locals {
   iso_url       = "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-11.0.0-amd64-netinst.iso"
   iso_checksum  = "sha512:5f6aed67b159d7ccc1a90df33cc8a314aa278728a6f50707ebf10c02e46664e383ca5fa19163b0a1c6a4cb77a39587881584b00b45f512b4a470f1138eaa1801"
@@ -11,8 +13,14 @@ locals {
     proxmox = {
       ip       = "192.168.10.13"
       wan_prefix = "192.168.50"
-      hostname = "proxmox"
       vm_id    = 500
+      hostname = "proxmox"
+    },
+    
+    virtualbox = {
+      ip       = "192.168.10.9"
+      hostname = "virtualbox"
+      vm_id    = 501
     }
   }
 }
@@ -86,8 +94,8 @@ build {
 
     content {
       vm_id   = source.value.vm_id
-      name    = source.key
-      vm_name = source.key
+      name    = "${source.key}"
+      vm_name = source.value.hostname
       boot_command = [
         "<wait5><esc><wait>",
         "auto url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
@@ -123,5 +131,3 @@ build {
     ]
   }
 }
-
-
