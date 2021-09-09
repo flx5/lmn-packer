@@ -206,6 +206,31 @@ build {
       "service qemu-guest-agent status"
     ]
   }
+  
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+    expect_disconnect = true
+
+    inline = [
+      # Run fsck offline only, otherwise ssh is available while running fsck...
+      "echo 'fsck_y_enable=\"YES\"' >> /etc/rc.conf",
+      "echo 'background_fsck=\"NO\"' >> /etc/rc.conf",
+      "echo 'keymap=\"de.noacc.kbd\"' >> /etc/rc.conf",
+      # Reboot into configured opnsense
+      "reboot"
+    ]
+  }
+  
+  # Give the system time to come fully up before shutdown
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+
+    inline = [
+       "sleep 120"
+    ]
+  }
 
 }
 
