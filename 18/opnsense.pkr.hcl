@@ -157,15 +157,17 @@ build {
   provisioner "shell" {
     # FreeBSD uses tcsh
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-    expect_disconnect = true
 
     inline = [
       "env ASSUME_ALWAYS_YES=YES pkg install ca_root_nss",
       "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in",
       "echo 'Installing OpnSense ${var.opnsense_release}'",
-      "mkdir /conf",
-      "fetch -o /conf/config.xml http://${build.PackerHTTPAddr}/config.xml",
+      # Disable reboot
+      "sed -i '' 's/reboot//' opnsense-bootstrap.sh.in",
       "sh ./opnsense-bootstrap.sh.in -r ${var.opnsense_release} -y",
+      # Write config after running bootstrap because bootstrap would delete the
+      "mkdir -p /conf",
+      "fetch -o /conf/config.xml http://${build.PackerHTTPAddr}/config.xml"
     ]
   }
 
@@ -188,7 +190,19 @@ build {
       "echo 'qemu_guest_agent_flags=\"-d -v -l /var/log/qemu-ga.log\"' >> /etc/rc.conf",
       "kldload virtio_console",
       "echo virtio_console_load=\"YES\" >> /boot/loader.conf",
-      "service qemu-guest-agent start"
+      "service qemu-guest-agent start",
+      "service qemu-guest-agent status"
+    ]
+  }
+
+  # Reboot manually because we deactivated it after bootstrap.
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+    expect_disconnect = true
+
+    inline = [
+      "reboot"
     ]
   }
 

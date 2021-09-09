@@ -67,7 +67,8 @@ jobs:
       - name: Cleanup
         if: ${{ always() }}
         run: |
-          sudo qm destroy 200
+          # TODO Disabled for debugging
+          #sudo qm destroy 200
           sudo rm /var/lib/vz/template/iso/*
           
           
