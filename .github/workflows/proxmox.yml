@@ -9,7 +9,7 @@ env:
 # Controls when the workflow will run
 on:
   schedule:
-    - cron: '30 01 * * *'
+    - cron: '30 02 * * *'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -79,21 +79,24 @@ jobs:
         run: |
           sudo vzdump --compress lzo --dumpdir ./dump/ 201
           
-      # TODO UPLOAD dump TO FILESERVER
+      - name: Show dumps
+        run: ls -lh ./dump/
+          
+      # TODO UPLOAD ./dump/ TO FILESERVER
           
            
       - name: Cleanup
         if: ${{ always() }}
         run: |
-          # TODO Disabled for debugging
-          
           # Stop & destroy vms
-          #sudo qm stop 300
-          #sudo qm destroy 300
+          sudo qm stop 300
+          sudo qm destroy 300
           
           # Destroy templates
-          #sudo qm destroy 200
-          #sudo qm destroy 201
+          sudo qm destroy 200
+          sudo qm destroy 201
+          
+          # Remove downloaded ISOs (otherwise packer might fail)
           sudo rm /var/lib/vz/template/iso/*
           
           
