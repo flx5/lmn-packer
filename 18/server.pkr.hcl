@@ -1,55 +1,3 @@
-variable "proxmox_host" {
-  type    = string
-  default = "localhost:8006"
-}
-
-variable "proxmox_user" {
-  type      = string
-  default   = "root@pam"
-  sensitive = true
-}
-
-variable "proxmox_password" {
-  type      = string
-  default   = "vagrant"
-  sensitive = true
-}
-
-variable "proxmox_node" {
-  type    = string
-  default = "proxmox"
-}
-
-variable "proxmox_iso_pool" {
-  type    = string
-  default = "local"
-}
-
-variable "proxmox_disk_pool" {
-  type    = string
-  default = "local"
-}
-
-variable "proxmox_disk_pool_type" {
-  type    = string
-  default = "directory"
-}
-
-variable "proxmox_disk_format" {
-  type    = string
-  default = "qcow2"
-}
-
-variable "headless" {
-  type    = string
-  default = "false"
-}
-
-variable "vbox_internal_net" {
-  type    = string
-  default = null
-}
-
 locals {
   iso_url       = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum  = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
@@ -176,8 +124,6 @@ source "virtualbox-iso" "server" {
   ssh_bastion_password = local.root_password
 }
 
-# TODO Unify build blocks if possible
-# See also https://www.hashicorp.com/blog/using-template-files-with-hashicorp-packer for an example of dynamic source
 build {
   sources = ["sources.proxmox-iso.server", "sources.virtualbox-iso.server"]
 

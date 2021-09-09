@@ -1,13 +1,18 @@
-variable "opnsense_release" {
-  type    = string
-  default = "21.7"
-}
+# TODO Correct memory / disk size
+
+  # FreeBSD Version should match with the opnsense version
+  # Typically that information can be found at https://opnsense.org/blog/
 
 locals {
   root_password = "Muster!"
+  iso_url       = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
+  iso_checksum  = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
+
+  memory        = 1024
+  opnsense_release = "21.7"
 
   sources = {
-    "virtualbox-iso.opnsense" = {
+    "virtualbox-iso" = {
       wan_iface   = "em0"
       lan_iface   = "em1"
       packages    = "os-virtualbox"
@@ -15,7 +20,7 @@ locals {
       partitions = "ada0"
     }
 
-    "proxmox-iso.opnsense" = {
+    "proxmox-iso" = {
       wan_iface = "vtnet0"
       lan_iface = "vtnet1"
       packages  = "os-qemu-guest-agent"
@@ -26,7 +31,7 @@ locals {
   }
 }
 
-source "proxmox-iso" "opnsense" {
+source "proxmox-iso" "freebsd" {
   proxmox_url              = "https://${var.proxmox_host}/api2/json"
   username                 = var.proxmox_user
   password                 = var.proxmox_password
@@ -39,12 +44,12 @@ source "proxmox-iso" "opnsense" {
   template_description = "Linuxmuster.net OPNSense Appliance"
   qemu_agent           = "true"
 
-  iso_url          = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
-  iso_checksum     = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
+  iso_url          = local.iso_url
+  iso_checksum     = local.iso_checksum
   iso_storage_pool = "${var.proxmox_iso_pool}"
 
   # TODO Correct memory / disk size
-  memory = 1024
+  memory = local.memory
 
   cpu_type = "host"
   cores    = 2
@@ -82,20 +87,17 @@ source "proxmox-iso" "opnsense" {
   }
 }
 
-source "virtualbox-iso" "opnsense" {
+source "virtualbox-iso" "freebsd" {
   guest_os_type = "FreeBSD_64"
 
-  # FreeBSD Version should match with the opnsense version
-  # Typically that information can be found at https://opnsense.org/blog/
-
-  iso_url      = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
-  iso_checksum = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
+  iso_url      = local.iso_url
+  iso_checksum = local.iso_checksum
 
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
 
   # TODO Correct memory / disk size
-  memory = 1024
+  memory = local.memory
   # 25 GB
   disk_size = 25600
 
@@ -128,9 +130,10 @@ build {
   dynamic "source" {
     for_each = local.sources
 
-    labels = [source.key]
+    labels = ["${source.key}.freebsd"]
 
     content {
+      name = "opnsense"
       boot_command = [
         "<esc><wait>",
         "boot -s<wait>",
@@ -148,8 +151,13 @@ build {
           root_pw_hash = bcrypt(local.root_password),
           wan_iface    = source.value.wan_iface,
           lan_iface    = source.value.lan_iface
-        }),
-        "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { root_pw = local.root_password, wan_iface = source.value.wan_iface, lan_iface = source.value.lan_iface, partitions =  source.value.partitions})
+          }),
+        "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { 
+                                   root_pw = local.root_password, 
+                                   wan_iface = source.value.wan_iface, 
+                                   lan_iface = source.value.lan_iface, 
+                                   partitions =  source.value.partitions
+                             })
       }
     }
   }
@@ -161,10 +169,10 @@ build {
     inline = [
       "env ASSUME_ALWAYS_YES=YES pkg install ca_root_nss",
       "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in",
-      "echo 'Installing OpnSense ${var.opnsense_release}'",
+      "echo 'Installing OpnSense ${local.opnsense_release}'",
       # Disable reboot
       "sed -i '' 's/reboot//' opnsense-bootstrap.sh.in",
-      "sh ./opnsense-bootstrap.sh.in -r ${var.opnsense_release} -y",
+      "sh ./opnsense-bootstrap.sh.in -r ${local.opnsense_release} -y",
       # Write config after running bootstrap because bootstrap would delete the
       "mkdir -p /conf",
       "fetch -o /conf/config.xml http://${build.PackerHTTPAddr}/config.xml"
