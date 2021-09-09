@@ -8,11 +8,7 @@ env:
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # TODO Add run on schedule
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -42,6 +38,14 @@ jobs:
 
   # This workflow contains a single job called "build"
   build:
+    env:
+      PKR_VAR_proxmox_node: proxmox
+      PKR_VAR_proxmox_password: Muster!
+      PKR_VAR_proxmox_disk_pool: local
+      PKR_VAR_proxmox_disk_pool_type: directory
+      PKR_VAR_proxmox_disk_format: raw
+      
+  
     needs: setup
     # The type of runner that the job will run on
     runs-on: [self-hosted, proxmox]
@@ -54,21 +58,41 @@ jobs:
       # Runs a single command using the runners shell
       - name: Build OPNSense
         run:
-           packer build -only=proxmox-iso.opnsense -var 'proxmox_password=Muster!' -var 'proxmox_node=proxmox' -var 'proxmox_disk_pool=local' -var 'proxmox_disk_pool_type=directory' -var 'proxmox_disk_format=raw' 18
+           packer build -only=proxmox-iso.opnsense 18
+           
+      - name: Create OPNSense Instance
+        run: |
+          sudo qm clone 200 300 --full 0
+          sudo qm start 300
+          
+      - name: Build LMN Server
+        run: packer build -only=proxmox-iso.server 18
+          
         
       - name: Export OPNSense
         run: |
           mkdir -p dump
-          vzdump --compress lzo --dumpdir ./dump/ 200
+          sudo vzdump --compress lzo --dumpdir ./dump/ 200
           
-          # TODO UPLOAD TO FILESERVER
+      - name: Export LMN Server
+        run: |
+          sudo vzdump --compress lzo --dumpdir ./dump/ 201
+          
+      # TODO UPLOAD dump TO FILESERVER
           
            
       - name: Cleanup
         if: ${{ always() }}
         run: |
           # TODO Disabled for debugging
+          
+          # Stop & destroy vms
+          #sudo qm stop 300
+          #sudo qm destroy 300
+          
+          # Destroy templates
           #sudo qm destroy 200
+          #sudo qm destroy 201
           sudo rm /var/lib/vz/template/iso/*
           
           

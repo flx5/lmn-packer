@@ -8,7 +8,7 @@ if ! qm status 200 | grep -q running; then
 fi
 
 if [[ -d dump ]]; then
-  rm dump/vzdump-qemu-401*
+  rm dump/vzdump-qemu-201*
 else
   mkdir dump
 fi
@@ -18,10 +18,10 @@ fi
 packer build -only=proxmox-iso.server -var 'proxmox_password=Muster!' -var 'proxmox_node=pve' -var 'proxmox_disk_pool=vd-hdd-1400' -var 'proxmox_disk_pool_type=lvm-thin' -var 'proxmox_disk_format=raw' 18
 
 # Dump the VM
-qm set 401 --template 0
-vzdump --compress lzo --dumpdir ./dump/ 401
+qm set 201 --template 0
+vzdump --compress lzo --dumpdir ./dump/ 201
 
 # Cleanup
-qm destroy 401
+qm destroy 201
 
 #TODO Move the dumped lzo somewhere
