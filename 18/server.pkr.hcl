@@ -6,7 +6,7 @@ server = {
   root_password = "Muster!"
 
   boot_command = [
-    "<esc><esc><enter><wait>",
+    "<esc><esc><wait5><enter><wait5>",
     "/install/vmlinuz noapic ",
     "initrd=/install/initrd.gz ",
     "debian-installer/locale=en_US keymap=de hostname=server ",
@@ -73,7 +73,7 @@ source "proxmox-iso" "server" {
     "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.server.root_password, installs = ["qemu-guest-agent"] })
   }
 
-  ssh_timeout  = "10000s"
+  ssh_timeout  = "20m"
   ssh_username = "root"
   ssh_password = local.server.root_password
 
@@ -91,6 +91,7 @@ source "virtualbox-iso" "server" {
   shutdown_command     = "shutdown -P now"
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
+  keep_registered      = var.vbox_keep_registered
 
   memory = local.server.memory
   # 25 GB
@@ -116,7 +117,7 @@ source "virtualbox-iso" "server" {
   
   ssh_host = "127.0.0.1"
   ssh_port = 22
-  ssh_timeout = "10000s"
+  ssh_timeout = "20m"
   skip_nat_mapping = true
   
   ssh_username         = "root"

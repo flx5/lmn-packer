@@ -73,7 +73,7 @@ source "proxmox-iso" "freebsd" {
 
   boot_wait = "5s"
 
-  ssh_timeout  = "10000s"
+  ssh_timeout  = "20m"
   ssh_host         = "10.0.0.254"
   ssh_username = "root"
   ssh_password = local.opnsense.root_password
@@ -97,6 +97,7 @@ source "virtualbox-iso" "freebsd" {
 
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
+  keep_registered      = var.vbox_keep_registered
 
   # TODO Correct memory / disk size
   memory = local.opnsense.memory
@@ -110,7 +111,7 @@ source "virtualbox-iso" "freebsd" {
 
   ssh_host         = "127.0.0.1"
   ssh_port         = 22
-  ssh_timeout      = "10000s"
+  ssh_timeout      = "20m"
   skip_nat_mapping = true
 
   ssh_username         = "root"
