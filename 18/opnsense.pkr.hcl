@@ -4,6 +4,7 @@
   # Typically that information can be found at https://opnsense.org/blog/
 
 locals {
+  opnsense = {
   root_password = "Muster!"
   iso_url       = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
   iso_checksum  = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
@@ -29,6 +30,7 @@ locals {
       partitions = "da0"
     }
   }
+  }
 }
 
 source "proxmox-iso" "freebsd" {
@@ -44,12 +46,12 @@ source "proxmox-iso" "freebsd" {
   template_description = "Linuxmuster.net OPNSense Appliance"
   qemu_agent           = "true"
 
-  iso_url          = local.iso_url
-  iso_checksum     = local.iso_checksum
+  iso_url          = local.opnsense.iso_url
+  iso_checksum     = local.opnsense.iso_checksum
   iso_storage_pool = "${var.proxmox_iso_pool}"
 
   # TODO Correct memory / disk size
-  memory = local.memory
+  memory = local.opnsense.memory
 
   cpu_type = "host"
   cores    = 2
@@ -74,7 +76,7 @@ source "proxmox-iso" "freebsd" {
   ssh_timeout  = "10000s"
   ssh_host         = "10.0.0.254"
   ssh_username = "root"
-  ssh_password = local.root_password
+  ssh_password = local.opnsense.root_password
 
   network_adapters {
     bridge = "vmbr0"
@@ -90,14 +92,14 @@ source "proxmox-iso" "freebsd" {
 source "virtualbox-iso" "freebsd" {
   guest_os_type = "FreeBSD_64"
 
-  iso_url      = local.iso_url
-  iso_checksum = local.iso_checksum
+  iso_url      = local.opnsense.iso_url
+  iso_checksum = local.opnsense.iso_checksum
 
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
 
   # TODO Correct memory / disk size
-  memory = local.memory
+  memory = local.opnsense.memory
   # 25 GB
   disk_size = 25600
 
@@ -112,10 +114,10 @@ source "virtualbox-iso" "freebsd" {
   skip_nat_mapping = true
 
   ssh_username         = "root"
-  ssh_password         = local.root_password
+  ssh_password         = local.opnsense.root_password
   ssh_bastion_host     = "10.0.0.254"
   ssh_bastion_username = "root"
-  ssh_bastion_password = local.root_password
+  ssh_bastion_password = local.opnsense.root_password
 
   shutdown_command = "shutdown -p now"
 
@@ -128,7 +130,7 @@ source "virtualbox-iso" "freebsd" {
 build {
 
   dynamic "source" {
-    for_each = local.sources
+    for_each = local.opnsense.sources
 
     labels = ["${source.key}.freebsd"]
 
@@ -148,12 +150,12 @@ build {
 
       http_content = {
         "/config.xml" = templatefile("opnsense/config.xml", {
-          root_pw_hash = bcrypt(local.root_password),
+          root_pw_hash = bcrypt(local.opnsense.root_password),
           wan_iface    = source.value.wan_iface,
           lan_iface    = source.value.lan_iface
           }),
         "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { 
-                                   root_pw = local.root_password, 
+                                   root_pw = local.opnsense.root_password, 
                                    wan_iface = source.value.wan_iface, 
                                    lan_iface = source.value.lan_iface, 
                                    partitions =  source.value.partitions
@@ -169,10 +171,10 @@ build {
     inline = [
       "env ASSUME_ALWAYS_YES=YES pkg install ca_root_nss",
       "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in",
-      "echo 'Installing OpnSense ${local.opnsense_release}'",
+      "echo 'Installing OpnSense ${local.opnsense.opnsense_release}'",
       # Disable reboot
       "sed -i '' 's/reboot//' opnsense-bootstrap.sh.in",
-      "sh ./opnsense-bootstrap.sh.in -r ${local.opnsense_release} -y",
+      "sh ./opnsense-bootstrap.sh.in -r ${local.opnsense.opnsense_release} -y",
       # Write config after running bootstrap because bootstrap would delete the
       "mkdir -p /conf",
       "fetch -o /conf/config.xml http://${build.PackerHTTPAddr}/config.xml"
@@ -196,7 +198,7 @@ build {
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
 
     inline = [
-      "pkg install -y ${local.sources["${source.type}.${source.name}"].packages}"
+      "pkg install -y ${local.opnsense.sources["${source.type}"].packages}"
     ]
   }
 

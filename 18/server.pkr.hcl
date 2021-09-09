@@ -1,4 +1,5 @@
 locals {
+server = {
   iso_url       = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum  = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
   memory        = 4096
@@ -15,6 +16,7 @@ locals {
     "netcfg/get_domain=linuxmuster.lan ",
     "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
   ]
+}
 }
 
 packer {
@@ -34,11 +36,11 @@ source "proxmox-iso" "server" {
   template_description = "Linuxmuster.net Server Appliance"
   qemu_agent           = "true"
 
-  iso_url          = local.iso_url
-  iso_checksum     = local.iso_checksum
+  iso_url          = local.server.iso_url
+  iso_checksum     = local.server.iso_checksum
   iso_storage_pool = "${var.proxmox_iso_pool}"
 
-  memory   = local.memory
+  memory   = local.server.memory
   cpu_type = "host"
   cores    = 2
   sockets  = 2
@@ -65,15 +67,15 @@ source "proxmox-iso" "server" {
   onboot      = true
 
   boot_wait = "5s"
-  boot_command = local.boot_command
+  boot_command = local.server.boot_command
 
   http_content = {
-    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = ["qemu-guest-agent"] })
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.server.root_password, installs = ["qemu-guest-agent"] })
   }
 
   ssh_timeout  = "10000s"
   ssh_username = "root"
-  ssh_password = local.root_password
+  ssh_password = local.server.root_password
 
   network_adapters {
     bridge = "vmbr1"
@@ -83,26 +85,26 @@ source "proxmox-iso" "server" {
 
 source "virtualbox-iso" "server" {
   guest_os_type = "Ubuntu_64"
-  iso_url       = local.iso_url
-  iso_checksum  = local.iso_checksum
+  iso_url       = local.server.iso_url
+  iso_checksum  = local.server.iso_checksum
 
   shutdown_command     = "shutdown -P now"
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
 
-  memory = local.memory
+  memory = local.server.memory
   # 25 GB
   disk_size = 25600
 
   # 100 GB
   disk_additional_size = [102400]
   
-  boot_command = local.boot_command
+  boot_command = local.server.boot_command
 
   boot_wait = "5s"
 
   http_content = {
-    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = [] })
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.server.root_password, installs = [] })
   }
 
   vboxmanage = [
@@ -118,10 +120,10 @@ source "virtualbox-iso" "server" {
   skip_nat_mapping = true
   
   ssh_username         = "root"
-  ssh_password         = local.root_password
+  ssh_password         = local.server.root_password
   ssh_bastion_host = "10.0.0.1"
   ssh_bastion_username = "root"
-  ssh_bastion_password = local.root_password
+  ssh_bastion_password = local.server.root_password
 }
 
 build {
