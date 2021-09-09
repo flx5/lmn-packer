@@ -170,6 +170,18 @@ build {
       "fetch -o /conf/config.xml http://${build.PackerHTTPAddr}/config.xml"
     ]
   }
+  
+
+  # Reboot manually because we deactivated it after bootstrap.
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+    expect_disconnect = true
+
+    inline = [
+      "reboot"
+    ]
+  }
 
   provisioner "shell" {
     # FreeBSD uses tcsh
@@ -192,17 +204,6 @@ build {
       "echo virtio_console_load=\"YES\" >> /boot/loader.conf",
       "service qemu-guest-agent start",
       "service qemu-guest-agent status"
-    ]
-  }
-
-  # Reboot manually because we deactivated it after bootstrap.
-  provisioner "shell" {
-    # FreeBSD uses tcsh
-    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-    expect_disconnect = true
-
-    inline = [
-      "reboot"
     ]
   }
 
