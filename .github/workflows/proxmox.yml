@@ -65,6 +65,8 @@ jobs:
         run: |
           sudo qm clone 200 300 --full 0
           sudo qm start 300
+          # Wait for OPNSense to come up
+          sleep 120
           
       - name: Build LMN Server
         run: packer build -only=proxmox-iso.server 18
