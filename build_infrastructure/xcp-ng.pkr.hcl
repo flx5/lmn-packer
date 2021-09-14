@@ -51,8 +51,6 @@ build {
   sources = [ "sources.qemu.base-debian" ]
   
   provisioner "shell" {
-
-
     inline = [
       "yum update -y",
       
@@ -64,7 +62,7 @@ build {
       "yum -y install packer",
       
       # Setup SR
-      "SR_UUID=$(xe sr-create type=ext content-type=user name-label="Local" device-config:device=/dev/sda3)",
+      "SR_UUID=$(xe sr-create type=ext content-type=user name-label=Local device-config:device=/dev/sda3)",
       "POOL_UUID=$(xe pool-list --minimal)",
       "xe pool-param-set uuid=$POOL_UUID default-SR=$SR_UUID",
       "/usr/bin/create-guest-templates"
