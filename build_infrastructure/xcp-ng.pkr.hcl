@@ -45,7 +45,7 @@ source "qemu" "xcp-ng" {
       ]
 }
 
-
+# TODO Document this
 # Run successfull build using  qemu-system-x86_64 -cpu host --accel kvm -m 4096 -nic user,id=wandev,net=192.168.70.0/24,hostfwd=tcp::2255-:22,hostfwd=tcp::8443-:443 output-base-debian/proxmox
 build {
   sources = [ "sources.qemu.xcp-ng" ]
@@ -55,7 +55,7 @@ build {
       "yum update -y",
       
       # Install socat for VNC forwarding
-      "yum install socat",
+      "yum install -y socat",
       
       # Install packer
       "yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo",
