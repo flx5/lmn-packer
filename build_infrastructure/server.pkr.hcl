@@ -25,6 +25,11 @@ locals {
   }
 }
 
+variable "headless" {
+  type = boolean
+  default = false
+}
+
 variable "github_token" {
   type      = string
   sensitive = true
