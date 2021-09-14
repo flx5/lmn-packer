@@ -40,6 +40,8 @@ variable "github_repository" {
 
 
 source "qemu" "base-debian" {
+
+  headless = var.headless
  
   # TODO Guest agent config?
   #qemu_agent           = "true"
