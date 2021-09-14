@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-    <installation >
-        <primary-disk>vda</primary-disk>
+    <installation srtype="ext">
+        <primary-disk guest-storage="True">vda</primary-disk>
         <keymap>de</keymap>
         <root-password>${root_pw}</root-password>
         <source type="local" />

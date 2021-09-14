@@ -7,12 +7,9 @@ variable "headless" {
   default = "false"
 }
 
-source "qemu" "base-debian" {
+source "qemu" "xcp-ng" {
 
   headless = var.headless
- 
-  # TODO Guest agent config?
-  #qemu_agent           = "true"
 
   iso_url          = "https://mirrors.xcp-ng.org/isos/8.2/xcp-ng-8.2.0.iso?https=1"
   iso_checksum     = "sha256:789c0e33454211c06867dd5f48f8449abe4ca581adada5052f7cef3a731e450e"
@@ -49,7 +46,28 @@ source "qemu" "base-debian" {
 }
 
 
-# Run successfull build using qemu-system-x86_64 --accel kvm -m 2048 -nic user,id=wandev,net=192.168.70.0/24 proxmox
+# Run successfull build using  qemu-system-x86_64 -cpu host --accel kvm -m 4096 -nic user,id=wandev,net=192.168.70.0/24,hostfwd=tcp::2255-:22,hostfwd=tcp::8443-:443 output-base-debian/proxmox
 build {
   sources = [ "sources.qemu.base-debian" ]
+  
+  provisioner "shell" {
+
+
+    inline = [
+      "yum update -y",
+      
+      # Install socat for VNC forwarding
+      "yum install socat",
+      
+      # Install packer
+      "yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo",
+      "yum -y install packer",
+      
+      # Setup SR
+      "SR_UUID=$(xe sr-create type=ext content-type=user name-label="Local" device-config:device=/dev/sda3)",
+      "POOL_UUID=$(xe pool-list --minimal)",
+      "xe pool-param-set uuid=$POOL_UUID default-SR=$SR_UUID",
+      "/usr/bin/create-guest-templates"
+    ]
+  }
 }
