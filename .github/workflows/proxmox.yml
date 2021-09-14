@@ -56,7 +56,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
-      - name: Wait for Proxmox to be reade
+      - name: Wait for Proxmox to be ready
         run: wget --spider --tries=20 --wait=10 --retry-connrefused --no-check-certificate --retry-on-host-error https://localhost:8006/
 
       # Runs a single command using the runners shell
