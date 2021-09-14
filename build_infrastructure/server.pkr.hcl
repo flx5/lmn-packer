@@ -38,6 +38,45 @@ variable "github_repository" {
   type = string
 }
 
+
+source "qemu" "base-debian" {
+ 
+  # TODO Guest agent config?
+  #qemu_agent           = "true"
+
+  iso_url          = local.iso_url
+  iso_checksum     = local.iso_checksum
+
+  memory   = 2048
+  cpus    = 2
+
+
+  disk_size = "500G"
+  format    = "qcow2"
+  accelerator = "kvm"
+  vm_name = "proxmox"
+  net_device = "virtio-net"
+  disk_interface = "virtio"
+
+  boot_wait = "5s"
+
+# TODO Overwrite grub disk
+  http_content = {
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = ["qemu-guest-agent"], grub_disk = "vda" })
+  }
+
+  ssh_timeout  = "10000s"
+  ssh_username = "root"
+  ssh_password = local.root_password
+  
+      boot_command = [
+        "<wait5><esc><wait>",
+        "auto url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+      
+        "<enter>"
+      ]
+}
+
 source "proxmox-iso" "base-debian" {
   proxmox_url              = "https://${var.proxmox_host}/api2/json"
   username                 = var.proxmox_user
@@ -74,7 +113,7 @@ source "proxmox-iso" "base-debian" {
   boot_wait = "5s"
 
   http_content = {
-    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = ["qemu-guest-agent"] })
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = ["qemu-guest-agent"], grub_disk = "sda" })
   }
 
   ssh_timeout  = "10000s"
@@ -85,6 +124,11 @@ source "proxmox-iso" "base-debian" {
     bridge = "vmbr0"
     model  = "virtio"
   }
+}
+
+# Run successfull build using qemu-system-x86_64 --accel kvm -m 2048 -nic user,id=wandev,net=192.168.70.0/24 proxmox
+build {
+  sources = [ "sources.qemu.base-debian" ]
 }
 
 build {
