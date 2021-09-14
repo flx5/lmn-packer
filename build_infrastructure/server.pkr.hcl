@@ -67,7 +67,6 @@ source "qemu" "base-debian" {
 
   boot_wait = "5s"
 
-# TODO Overwrite grub disk
   http_content = {
     "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.root_password, installs = ["qemu-guest-agent"], grub_disk = "vda" })
   }
