@@ -26,8 +26,8 @@ locals {
 }
 
 variable "headless" {
-  type = boolean
-  default = false
+  type    = string
+  default = "false"
 }
 
 variable "github_token" {
