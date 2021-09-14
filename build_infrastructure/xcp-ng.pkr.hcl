@@ -48,7 +48,7 @@ source "qemu" "xcp-ng" {
 
 # Run successfull build using  qemu-system-x86_64 -cpu host --accel kvm -m 4096 -nic user,id=wandev,net=192.168.70.0/24,hostfwd=tcp::2255-:22,hostfwd=tcp::8443-:443 output-base-debian/proxmox
 build {
-  sources = [ "sources.qemu.base-debian" ]
+  sources = [ "sources.qemu.xcp-ng" ]
   
   provisioner "shell" {
     inline = [
