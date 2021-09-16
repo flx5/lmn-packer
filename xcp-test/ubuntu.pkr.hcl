@@ -1,11 +1,11 @@
-/*packer {
+packer {
   required_plugins {
    xenserver= {
-      version = ">= v0.3.2"
-      source = "github.com/ddelnano/xenserver"
+      version = "= v0.3.3-dev1"
+      source = "github.com/flx5/xenserver"
     }
   }
-}*/
+}
 
 source "xenserver-iso" "test" {
   # Ubuntu 18.04.5 boots very slowly on xen in bios mode and not at all in uefi mode.
