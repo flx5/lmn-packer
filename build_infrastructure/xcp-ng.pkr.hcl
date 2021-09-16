@@ -35,6 +35,10 @@ source "qemu" "xcp-ng" {
   ssh_username = "root"
   ssh_password = local.root_password
   
+  # TODO Document non-root use https://mike42.me/blog/2019-08-how-to-use-the-qemu-bridge-helper-on-debian-10
+  # TODO Must be nat bridge
+  net_bridge = "virbr0"
+  
       boot_command = [
         "mboot.c32 /boot/xen.gz ",
         "dom0_max_vcpus=1-16 dom0_mem=max:8192M ",
@@ -46,26 +50,21 @@ source "qemu" "xcp-ng" {
 }
 
 # TODO Document this
-# Run successfull build using  qemu-system-x86_64 -cpu host --accel kvm -m 4096 -nic user,id=wandev,net=192.168.70.0/24,hostfwd=tcp::2255-:22,hostfwd=tcp::8443-:443 output-base-debian/proxmox
+# Run successfull build using
+/*
+qemu-system-x86_64 -cpu host --accel kvm -m 4096 -smp cpus=4,sockets=1 \
+-drive file=output-xcp-ng/proxmox,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+-netdev bridge,id=user.0,br=virbr0 -device virtio-net,netdev=user.0
+*/
 build {
   sources = [ "sources.qemu.xcp-ng" ]
-  
+
   provisioner "shell" {
     inline = [
-      "yum update -y",
+    #  "yum update -y",
       
       # Install socat for VNC forwarding
-      "yum install -y socat",
-      
-      # Install packer
-      "yum-config-manager --add-repo https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo",
-      "yum -y install packer",
-      
-      # Setup SR
-      "SR_UUID=$(xe sr-create type=ext content-type=user name-label=Local device-config:device=/dev/sda3)",
-      "POOL_UUID=$(xe pool-list --minimal)",
-      "xe pool-param-set uuid=$POOL_UUID default-SR=$SR_UUID",
-      "/usr/bin/create-guest-templates"
+      "yum install -y socat"
     ]
   }
 }
