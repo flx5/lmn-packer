@@ -1,6 +1,6 @@
 locals {
 server = {
-  iso_url       = "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.5-server-amd64.iso"
+  iso_url       = "http://old-releases.ubuntu.com/releases/bionic/ubuntu-18.04.5-server-amd64.iso"
   iso_checksum  = "sha256:8c5fc24894394035402f66f3824beb7234b757dd2b5531379cb310cedfdf0996"
   memory        = 4096
   root_password = "Muster!"
