@@ -1,0 +1,14 @@
+name: QEMU Test
+concurrency: vm_host
+
+on:
+  push:
+
+jobs:
+  qemu:
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build XCP-NG VM
+        run:
+           packer build build_infrastructure/xcp-ng.pkr.hcl
