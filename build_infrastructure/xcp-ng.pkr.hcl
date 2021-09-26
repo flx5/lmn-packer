@@ -57,19 +57,44 @@ source "qemu" "xcp-ng" {
 # TODO Document this
 # Run successfull build using
 /*
+virbr0 is nat bridge
+
+TODO Add libvirt xml files
+
+qemu-img create -f qcow2 -b proxmox output-xcp-ng/disk.qcow2
+
 qemu-system-x86_64 -cpu host --accel kvm -m 4096 -smp cpus=4,sockets=1 \
--drive file=output-xcp-ng/proxmox,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+-drive file=output-xcp-ng/disk.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
 -netdev bridge,id=user.0,br=virbr0 -device virtio-net,netdev=user.0
 */
 build {
   sources = [ "sources.qemu.xcp-ng" ]
 
+  # Need to create service to persist network changes
+  # https://serverfault.com/a/414796
+  provisioner "file" {
+    source = "ovs-init.sh"
+    destination = "/etc/init.d/ovs-init"
+  }
+
+
   provisioner "shell" {
     inline = [
+       "chmod +x /etc/init.d/ovs-init",
+       "chkconfig --add ovs-init",
     #  "yum update -y",
       
       # Install socat for VNC forwarding
-      "yum install -y socat"
+      "yum install -y socat",
+      
+      "HOST_UUID=$(xe pif-list params=host-uuid --minimal)",
+      "RED_PIF=$(xe pif-list --minimal)",
+      "RED_NETWORK=$(xe network-list PIF-uuids=$RED_PIF --minimal)",
+      "xe network-param-set name-label=Red uuid=$RED_NETWORK",
+
+      "xe network-create name-label=Green bridge=br1",
+      "xe network-list",
+      "ifconfig"
     ]
   }
 }

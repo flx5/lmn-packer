@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+   xenserver= {
+      version = "= v0.3.3-dev1"
+      source = "github.com/flx5/xenserver"
+    }
+  }
+}
+
 # TODO Correct memory / disk size
 
   # FreeBSD Version should match with the opnsense version
@@ -7,7 +16,8 @@ locals {
   opnsense = {
   root_password = "Muster!"
   iso_url       = "https://download.freebsd.org/ftp/releases/amd64/amd64/ISO-IMAGES/12.2/FreeBSD-12.2-RELEASE-amd64-disc1.iso"
-  iso_checksum  = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
+  iso_checksum  = "289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
+  iso_checksum_type = "sha256"
 
   memory        = 1024
   opnsense_release = "21.7"
@@ -29,6 +39,16 @@ locals {
       wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface vtnet0<enter><wait10>"
       partitions = "da0"
     }
+    
+    # TODO Fix these values
+    "xenserver-iso" = {
+      wan_iface = "xn0"
+      lan_iface = "xn1"
+      packages  = ""
+
+      wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface xn0<enter><wait10>"
+      partitions = "ada0"
+    }
   }
   }
 }
@@ -47,7 +67,7 @@ source "proxmox-iso" "freebsd" {
   qemu_agent           = "true"
 
   iso_url          = local.opnsense.iso_url
-  iso_checksum     = local.opnsense.iso_checksum
+  iso_checksum     = "${var.opnsense.iso_checksum_type}:${var.opnsense.iso_checksum}"
   iso_storage_pool = "${var.proxmox_iso_pool}"
 
   # TODO Correct memory / disk size
@@ -93,7 +113,7 @@ source "virtualbox-iso" "freebsd" {
   guest_os_type = "FreeBSD_64"
 
   iso_url      = local.opnsense.iso_url
-  iso_checksum = local.opnsense.iso_checksum
+  iso_checksum = "${var.opnsense.iso_checksum_type}:${var.opnsense.iso_checksum}"
 
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
@@ -128,6 +148,49 @@ source "virtualbox-iso" "freebsd" {
 
 }
 
+source "xenserver-iso" "freebsd" { 
+  remote_host = "192.168.122.76"
+  remote_username = "root"
+  remote_password = "Muster!"
+
+  # Xenserver doesn't have an FreeBSD template
+  clone_template = "Other install media"
+
+  iso_url      = local.opnsense.iso_url
+  iso_checksum = local.opnsense.iso_checksum
+  iso_checksum_type = local.opnsense.iso_checksum_type
+  
+  tools_iso_name = "guest-tools.iso"
+  
+  
+  # TODO Correct memory / disk size / cores
+  vm_memory = local.opnsense.memory
+
+  # 25 GB
+  disk_size = 25600
+
+  boot_wait = "5s"
+
+  ssh_username         = "root"
+  ssh_password         = local.opnsense.root_password
+  ssh_host         = "10.0.0.254"
+  
+  ssh_bastion_host     = "192.168.122.76"
+  ssh_bastion_username = "root"
+  ssh_bastion_password = "Muster!"
+
+  shutdown_command = "shutdown -p now"
+  ssh_timeout = "20m"
+  
+  sr_iso_name = "Local storage"
+  sr_name = "Local storage"
+  
+  network_names = [
+   "Red",
+   "Green"
+  ]
+}
+
 build {
 
   dynamic "source" {
@@ -140,8 +203,8 @@ build {
       boot_command = [
         "<esc><wait>",
         "boot -s<wait>",
-        # Wait for 60  seconds just to be sure (on nested virtualization this is slow...)
-        "<enter><wait60>",
+        # Wait for quite some time just to be sure (on nested virtualization this is slow...)
+        "<enter><wait60><wait60>",
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",

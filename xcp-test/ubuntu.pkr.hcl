@@ -40,7 +40,7 @@ source "xenserver-iso" "test" {
  }
   
   vm_name = "server"
-  
+
   boot_wait = "20s"
   
   boot_command = [
@@ -50,6 +50,10 @@ source "xenserver-iso" "test" {
      "initrd /install/initrd.gz<enter>",
      "boot<enter>"
   ]  
+  
+  network_names = [
+   "Red"
+  ]
 }
 
 build {
