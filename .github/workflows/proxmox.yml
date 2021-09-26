@@ -58,8 +58,10 @@ jobs:
 
       
       - name: Wait for Proxmox to be ready
-        run: curl --retry-connrefused --retry-delay 10 --retry 20 --insecure -d "username=root@pam&password=Muster!" https://localhost:8006/api2/json/access/ticket
-
+        run: |
+          curl --retry-connrefused --retry-delay 10 --retry 20 --insecure -d "username=root@pam&password=Muster!" https://localhost:8006/api2/json/access/ticket
+          sleep 120
+          
       # Runs a single command using the runners shell
       - name: Build OPNSense
         run:
