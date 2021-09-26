@@ -42,7 +42,7 @@ source "qemu" "xcp-ng" {
   
   # TODO Document non-root use https://mike42.me/blog/2019-08-how-to-use-the-qemu-bridge-helper-on-debian-10
   # TODO Must be nat bridge
-  net_bridge = "var.net_bridge
+  net_bridge = var.net_bridge
   
       boot_command = [
         "mboot.c32 /boot/xen.gz ",
