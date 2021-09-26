@@ -6,7 +6,7 @@ on:
 
 jobs:
   qemu:
-    runs-on: [self-hosted, proxmox]
+    runs-on: [self-hosted, qemu]
     steps:
       - uses: actions/checkout@v2
       - name: Build XCP-NG VM
