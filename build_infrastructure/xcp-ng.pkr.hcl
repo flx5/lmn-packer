@@ -89,9 +89,8 @@ echo 'info usernet' | socat - UNIX-CONNECT:./mon.sock | grep HOST_FORWARD | tr -
 */
 build {
   sources = [ "sources.qemu.xcp-ng" ]
-  
-/*
+
   provisioner "shell" {
     script = "${path.root}/xcp_network.sh"
-  }*/
+  }
 }
