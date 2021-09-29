@@ -9,10 +9,6 @@ jobs:
     runs-on: [self-hosted, qemu]
     steps:
       - uses: actions/checkout@v2
-      - name: Show debug information
-        run: |
-           id
-           groups
       - name: Build XCP-NG VM
         run:
-           PACKER_LOG=1 packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl
+           packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl
