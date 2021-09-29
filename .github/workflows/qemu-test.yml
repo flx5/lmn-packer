@@ -11,4 +11,4 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build XCP-NG VM
         run:
-           packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl
+           PACKER_LOG=1 packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl

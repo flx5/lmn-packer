@@ -80,8 +80,8 @@ qemu-system-x86_64 -cpu host --accel kvm -m 4096 -smp $(nproc)  \
 -device virtio-net,netdev=user.0 \
 -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
 -device virtio-net,netdev=user.1 \
--monitor unix:$PWD/mon.sock,server,nowait
-
+-monitor unix:$PWD/mon.sock,server,nowait &
+ 
 
 To find ports use
 echo 'info usernet' | socat - UNIX-CONNECT:./mon.sock | grep HOST_FORWARD | tr -s ' ' | cut -d' ' -f 5,7
