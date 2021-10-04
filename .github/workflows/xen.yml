@@ -32,7 +32,8 @@ jobs:
               echo "Host: ${split[0]} Guest: ${split[1]}"
               echo "port_mapping_${split[1]}=${split[0]}" >> $GITHUB_ENV
           done <<< "$ports"
-          
+      - name: Wait for xcp-ng to boot
+        run: sleep 120
       - name: Install packer plugins
         run: packer init 18
         
