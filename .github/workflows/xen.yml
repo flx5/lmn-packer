@@ -1,0 +1,60 @@
+name: XCP-NG
+concurrency: vm_host
+
+on:
+  push:
+
+jobs:
+  qemu:
+    runs-on: [self-hosted, qemu]
+    steps:
+      - uses: actions/checkout@v2
+        
+      - name: Build XCP-NG VM
+        run:
+           packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl
+      - name: Create overlay disk
+        run: qemu-img create -f qcow2 -b proxmox output-xcp-ng/disk.qcow2
+      - name: Start XCP-NG VM
+        run: |
+          qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp $(nproc)  \
+          -drive file=output-xcp-ng/disk.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+          -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443 \
+          -device virtio-net,netdev=user.0 \
+          -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
+          -device virtio-net,netdev=user.1 \
+          -monitor unix:$PWD/mon.sock,server,nowait &
+      - name: Get XCP-NG Ports
+        run: |
+          ports=$(echo 'info usernet' | socat - UNIX-CONNECT:./mon.sock | grep HOST_FORWARD | tr -s ' ' | cut -d' ' -f 5,7)
+          while IFS= read -r line; do
+              split=( $line )
+              echo "Host: ${split[0]} Guest: ${split[1]}"
+              echo "port_mapping_${split[1]}=${split[0]}" >> $GITHUB_ENV
+          done <<< "$ports"
+          
+      - name: Build OPNSense
+        run: |
+          PACKER_LOG=1 packer build -only xenserver-iso.opnsense \
+          -var xcp_keep=always \
+          -var xen_api_port=${{ env.port_mapping_443 }} \
+          -var xen_ssh_port=${{ env.port_mapping_22 }} \
+          18
+          
+      - name: Start OPNSense
+        run: |
+          ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
+          ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-start opnsense"
+          ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
+          
+      - name: Build Server
+        run: |
+          PACKER_LOG=1 packer build -only xenserver-iso.server \
+          -var xcp_keep=always \
+          -var xen_api_port=${{ env.port_mapping_443 }} \
+          -var xen_ssh_port=${{ env.port_mapping_22 }} \
+          18
+          
+      - name: List output
+        run: |
+          ls -l output-*
