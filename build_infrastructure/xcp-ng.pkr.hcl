@@ -34,7 +34,7 @@ source "qemu" "xcp-ng" {
   disk_size = "500G"
   format    = "qcow2"
   accelerator = "kvm"
-  vm_name = "proxmox"
+  vm_name = "xcp-ng"
   net_device = "virtio-net"
   disk_interface = "virtio"
 
@@ -72,9 +72,9 @@ source "qemu" "xcp-ng" {
 # Run successfull build using
 /*
 
-qemu-img create -f qcow2 -b proxmox output-xcp-ng/disk.qcow2
+qemu-img create -f qcow2 -b xcp-ng output-xcp-ng/disk.qcow2
 
-qemu-system-x86_64 -cpu host --accel kvm -m 4096 -smp $(nproc)  \
+qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp $(nproc)  \
 -drive file=output-xcp-ng/disk.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
 -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443 \
 -device virtio-net,netdev=user.0 \
@@ -91,6 +91,36 @@ build {
   sources = [ "sources.qemu.xcp-ng" ]
 
   provisioner "shell" {
+    # Wait for xcp to come fully up
+    pause_before = "2m"
     script = "${path.root}/xcp_network.sh"
+  }
+  
+  # Validate the network settings after reboot
+  
+  provisioner "shell" {
+    expect_disconnect = true
+    pause_after = "2m"
+
+    inline = [
+      "reboot now"
+    ]
+  }
+  
+  provisioner "shell" {
+    script = "${path.root}/xcp_validate.sh"
+  }
+  
+  provisioner "file" {
+    source = "sshKeyFile.pub"
+    destination = "/tmp/sshKeyFile.pub"
+  }
+  
+  provisioner "shell" {
+    inline = [
+      "mkdir -p ~/.ssh && touch ~/.ssh/authorized_keys",
+      "chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys",
+      "cat /tmp/sshKeyFile.pub >> ~/.ssh/authorized_keys"
+    ]
   }
 }

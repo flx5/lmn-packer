@@ -2,11 +2,10 @@
 
 set -e
 
-# Wait for xen api to become ready.
-wget -O/dev/null --retry-connrefused --wait=10 --tries=20 --no-check-certificate https://localhost:443/
-
 # eth0 red
 # eth1 green
+
+xe network-list
 
 RED_NETWORK=$(xe network-list bridge=xenbr0 --minimal)
 echo "Red UUID: $RED_NETWORK"
