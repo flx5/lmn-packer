@@ -1,7 +1,7 @@
 packer {
   required_plugins {
    xenserver= {
-      version = "= v0.3.3-dev1"
+      version = "= v0.3.3-dev7"
       source = "github.com/flx5/xenserver"
     }
   }
@@ -44,7 +44,7 @@ locals {
     "xenserver-iso" = {
       wan_iface = "xn0"
       lan_iface = "xn1"
-      packages  = ""
+      packages  = "os-xen"
 
       wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface xn0<enter><wait10>"
       partitions = "ada0"
@@ -53,7 +53,7 @@ locals {
   }
 }
 
-source "proxmox-iso" "freebsd" {
+source "proxmox-iso" "opnsense" {
   proxmox_url              = "https://${var.proxmox_host}/api2/json"
   username                 = var.proxmox_user
   password                 = var.proxmox_password
@@ -67,7 +67,7 @@ source "proxmox-iso" "freebsd" {
   qemu_agent           = "true"
 
   iso_url          = local.opnsense.iso_url
-  iso_checksum     = "${var.opnsense.iso_checksum_type}:${var.opnsense.iso_checksum}"
+  iso_checksum     = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
   iso_storage_pool = "${var.proxmox_iso_pool}"
 
   # TODO Correct memory / disk size
@@ -109,11 +109,11 @@ source "proxmox-iso" "freebsd" {
   }
 }
 
-source "virtualbox-iso" "freebsd" {
+source "virtualbox-iso" "opnsense" {
   guest_os_type = "FreeBSD_64"
 
   iso_url      = local.opnsense.iso_url
-  iso_checksum = "${var.opnsense.iso_checksum_type}:${var.opnsense.iso_checksum}"
+  iso_checksum = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
 
   guest_additions_mode = "disable"
   headless             = "${var.headless}"
@@ -148,17 +148,20 @@ source "virtualbox-iso" "freebsd" {
 
 }
 
-source "xenserver-iso" "freebsd" { 
-  remote_host = "192.168.122.76"
-  remote_username = "root"
-  remote_password = "Muster!"
+source "xenserver-iso" "opnsense" { 
+  remote_host = var.xen_host
+  remote_port = var.xen_api_port
+  remote_ssh_port = var.xen_ssh_port
+  remote_username = var.xen_user
+  remote_password = var.xen_password
+  
+  vm_name = "opnsense"
 
   # Xenserver doesn't have an FreeBSD template
   clone_template = "Other install media"
 
   iso_url      = local.opnsense.iso_url
-  iso_checksum = local.opnsense.iso_checksum
-  iso_checksum_type = local.opnsense.iso_checksum_type
+  iso_checksum     = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
   
   tools_iso_name = "guest-tools.iso"
   
@@ -174,10 +177,6 @@ source "xenserver-iso" "freebsd" {
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
   ssh_host         = "10.0.0.254"
-  
-  ssh_bastion_host     = "192.168.122.76"
-  ssh_bastion_username = "root"
-  ssh_bastion_password = "Muster!"
 
   shutdown_command = "shutdown -p now"
   ssh_timeout = "20m"
@@ -189,6 +188,8 @@ source "xenserver-iso" "freebsd" {
    "Red",
    "Green"
   ]
+  
+  keep_vm = var.xcp_keep
 }
 
 build {
@@ -196,7 +197,7 @@ build {
   dynamic "source" {
     for_each = local.opnsense.sources
 
-    labels = ["${source.key}.freebsd"]
+    labels = ["${source.key}.opnsense"]
 
     content {
       name = "opnsense"
@@ -227,7 +228,7 @@ build {
       }
     }
   }
-
+  
   provisioner "shell" {
     # FreeBSD uses tcsh
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
@@ -285,6 +286,9 @@ build {
     # FreeBSD uses tcsh
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
     expect_disconnect = true
+    
+    # Give the system time to come fully up before shutdown
+    pause_after = "2m"
 
     inline = [
       # Run fsck offline only, otherwise ssh is available while running fsck...
@@ -295,17 +299,6 @@ build {
       "reboot"
     ]
   }
-  
-  # Give the system time to come fully up before shutdown
-  provisioner "shell" {
-    # FreeBSD uses tcsh
-    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-
-    inline = [
-       "sleep 120"
-    ]
-  }
-
 }
 
 

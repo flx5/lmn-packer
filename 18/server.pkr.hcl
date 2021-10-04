@@ -127,8 +127,57 @@ source "virtualbox-iso" "server" {
   ssh_bastion_password = local.server.root_password
 }
 
+source "xenserver-iso" "server" {
+
+  remote_host = var.xen_host
+  remote_port = var.xen_api_port
+  remote_ssh_port = var.xen_ssh_port
+  remote_username = var.xen_user
+  remote_password = var.xen_password
+  
+  vm_name = "server"
+  
+  # Template names can be found using xe template-list on the xen server.
+  clone_template = "Ubuntu Bionic Beaver 18.04"
+
+  iso_url       = local.server.iso_url
+  iso_checksum  = local.server.iso_checksum
+
+  shutdown_command     = "shutdown -P now"
+  
+  keep_vm = var.xcp_keep
+
+  vm_memory = local.server.memory
+  # 25 GB
+  disk_size = 25600
+
+  # 100 GB
+  additional_disks = [102400]
+  
+  boot_command = local.server.boot_command
+
+  boot_wait = "5s"
+
+  http_content = {
+    "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.server.root_password, installs = [] })
+  }
+
+  network_names = [
+   "Green"
+  ]
+
+  ssh_host = "10.0.0.1"
+  ssh_port = 22
+  ssh_timeout = "20m"
+  ssh_username         = "root"
+  ssh_password         = local.server.root_password
+}
+
 build {
-  sources = ["sources.proxmox-iso.server", "sources.virtualbox-iso.server"]
+  sources = [
+    "sources.proxmox-iso.server", 
+    "sources.virtualbox-iso.server", 
+    "sources.xenserver-iso.server"]
 
   provisioner "shell" {
     # Network is restarted by linuxmuster-prepare
