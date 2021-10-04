@@ -112,7 +112,7 @@ build {
   }
   
   provisioner "file" {
-    source = "sshKeyFile.pub"
+    source = "${path.root}/sshKeyFile.pub"
     destination = "/tmp/sshKeyFile.pub"
   }
   
