@@ -179,7 +179,7 @@ source "xenserver-iso" "opnsense" {
   ssh_host         = "10.0.0.254"
 
   shutdown_command = "shutdown -p now"
-  ssh_timeout = "20m"
+  ssh_timeout = "30m"
   
   sr_iso_name = "Local storage"
   sr_name = "Local storage"
