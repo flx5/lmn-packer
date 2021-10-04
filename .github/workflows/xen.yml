@@ -14,7 +14,7 @@ jobs:
         run:
            packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl
       - name: Create overlay disk
-        run: qemu-img create -f qcow2 -b proxmox output-xcp-ng/disk.qcow2
+        run: qemu-img create -f qcow2 -b xcp-ng output-xcp-ng/disk.qcow2
       - name: Start XCP-NG VM
         run: |
           qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp $(nproc)  \
