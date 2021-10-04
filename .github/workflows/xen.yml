@@ -33,6 +33,9 @@ jobs:
               echo "port_mapping_${split[1]}=${split[0]}" >> $GITHUB_ENV
           done <<< "$ports"
           
+      - name: Install packer plugins
+        run: packer init 18
+        
       - name: Build OPNSense
         run: |
           PACKER_LOG=1 packer build -only xenserver-iso.opnsense \
