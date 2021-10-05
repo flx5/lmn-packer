@@ -20,7 +20,7 @@ source "qemu" "xcp-ng" {
     "/answerfile" = templatefile("answerfile.pkrtpl.hcl", { root_pw = local.root_password })
   }
 
-  ssh_timeout  = "20m"
+  ssh_timeout  = "30m"
   ssh_username = "root"
   ssh_password = local.root_password
  
