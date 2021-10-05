@@ -1,27 +1,3 @@
-locals {
-   root_password = "Muster!"
-}
-
-variable "headless" {
-  type    = string
-  default = "false"
-}
-
-variable "red_network" {
-  type    = string
-  default = "192.168.122.0/24"
-}
-
-variable "sockets" {
-  type    = number
-  default = 1
-}
-
-variable "cores" {
-  type    = number
-  default = 4
-}
-
 source "qemu" "xcp-ng" {
 
   headless = var.headless
@@ -63,7 +39,7 @@ source "qemu" "xcp-ng" {
         "com1=115200,8n1 console=com1,va --- ",
         "/boot/vmlinuz console=hvc0 console=tty0 ",
         "answerfile_device=eth0 ",
-        "answerfile=http://192.168.122.2:{{.HTTPPort}}/answerfile ",
+        "answerfile=http://${cidrhost(var.red_network,2)}:{{.HTTPPort}}/answerfile ",
         "install --- /install.img<enter>"
       ]
 }

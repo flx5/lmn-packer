@@ -1,41 +1,23 @@
-variable "proxmox_host" {
+variable "headless" {
   type    = string
-  default = "localhost:8006"
+  default = "false"
 }
 
-variable "proxmox_user" {
-  type      = string
-  default   = "root@pam"
-  sensitive = true
+variable "sockets" {
+  type    = number
+  default = 1
 }
 
-variable "proxmox_password" {
-  type      = string
-  default   = "vagrant"
-  sensitive = true
+variable "cores" {
+  type    = number
+  default = 4
 }
 
-variable "proxmox_node" {
+variable "red_network" {
   type    = string
-  default = "proxmox"
+  default = "192.168.122.0/24"
 }
 
-variable "proxmox_iso_pool" {
-  type    = string
-  default = "local"
-}
-
-variable "proxmox_disk_pool" {
-  type    = string
-  default = "local"
-}
-
-variable "proxmox_disk_pool_type" {
-  type    = string
-  default = "directory"
-}
-
-variable "proxmox_disk_format" {
-  type    = string
-  default = "qcow2"
+locals {
+   root_password = "Muster!"
 }
