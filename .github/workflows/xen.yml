@@ -1,4 +1,5 @@
 name: XCP-NG
+concurrency: vm_host
 
 on:
   push:
@@ -62,9 +63,9 @@ jobs:
           kill $PID
       - name: Start OPNSense
         run: |
-          ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
-          ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-start opnsense"
-          ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
+          ssh -o "StrictHostKeyChecking no" root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
+          ssh -o "StrictHostKeyChecking no" root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-start opnsense"
+          ssh -o "StrictHostKeyChecking no" root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
           
       - name: Build Server
         env:
