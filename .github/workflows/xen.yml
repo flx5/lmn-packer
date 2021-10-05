@@ -15,7 +15,7 @@ jobs:
         run: mkdir -p logs screenshots
       - name: Build XCP-NG VM
         env:
-           PACKER_LOG_FILE: logs/xcp-ng.log
+           PACKER_LOG_PATH: logs/xcp-ng.log
         run: |
            ./take_screenshots.sh logs/xcp-ng.log xen &
            PID=$!
@@ -47,7 +47,7 @@ jobs:
         
       - name: Build OPNSense
         env:
-           PACKER_LOG_FILE: logs/opnsense.log
+           PACKER_LOG_PATH: logs/opnsense.log
         run: |
           ./take_screenshots.sh logs/opnsense.log opnsense &
           PID=$!
@@ -66,7 +66,7 @@ jobs:
           
       - name: Build Server
         env:
-           PACKER_LOG_FILE: logs/server.log
+           PACKER_LOG_PATH: logs/server.log
         run: |
           ./take_screenshots.sh logs/server.log server &
           PID=$!
