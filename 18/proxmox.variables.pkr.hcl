@@ -11,7 +11,7 @@ variable "proxmox_user" {
 
 variable "proxmox_password" {
   type      = string
-  default   = "vagrant"
+  default   = "Muster!"
   sensitive = true
 }
 

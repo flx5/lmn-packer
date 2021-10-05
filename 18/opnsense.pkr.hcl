@@ -98,6 +98,11 @@ source "proxmox-iso" "opnsense" {
   ssh_username = "root"
   ssh_password = local.opnsense.root_password
 
+  ssh_bastion_host     = "127.0.0.1"
+  ssh_bastion_port     = 2222
+  ssh_bastion_username = "root"
+  ssh_bastion_password = local.opnsense.root_password
+
   network_adapters {
     bridge = "vmbr0"
     model  = "virtio"
