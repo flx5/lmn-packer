@@ -1,5 +1,4 @@
 name: XCP-NG
-concurrency: vm_host
 
 on:
   push:
