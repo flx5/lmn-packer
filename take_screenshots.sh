@@ -7,7 +7,7 @@ PREFIX=$3
 mkdir -p screenshots
 
 # While packer is running
-while kill -0 $PACKER_PID 2> /dev/null; do
+while true; do
     VNC_URL=$(grep -o -E 'vnc\:\/\/([0-9\.:]+)' $LOGFILE)
     
     if [ -z "$VNC_URL" ]; then

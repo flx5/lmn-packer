@@ -15,9 +15,10 @@ jobs:
         run: mkdir -p logs screenshots
       - name: Build XCP-NG VM
         run: |
-           packer build -var headless=true build_infrastructure/xcp-ng.pkr.hcl &
-           PACKER_PID=$!
-           ./take_screenshots.sh $PACKER_PID logs/xcp-ng.log xen
+           ./take_screenshots.sh $PACKER_PID logs/xcp-ng.log xen &
+           PID=$!
+           packer build -only qemu.xcp-ng -var headless=true build_infrastructure
+           kill $PID
         env:
            PACKER_LOG_FILE: logs/xcp-ng.log
       - name: Create overlay disk
@@ -46,15 +47,15 @@ jobs:
         
       - name: Build OPNSense
         run: |
+          ./take_screenshots.sh $PACKER_PID logs/opnsense.log opnsense &
+          PID=$!
           packer build -only xenserver-iso.opnsense \
           -var xcp_keep=always \
           -var xen_api_port=${{ env.port_mapping_443 }} \
           -var xen_ssh_port=${{ env.port_mapping_22 }} \
-          18 &
+          18
           
-          PACKER_PID=$!
-          sleep 120
-          ./take_screenshots.sh $PACKER_PID logs/opnsense.log opnsense
+          kill $PID
         env:
            PACKER_LOG_FILE: logs/opnsense.log
       - name: Start OPNSense
@@ -65,15 +66,15 @@ jobs:
           
       - name: Build Server
         run: |
+          ./take_screenshots.sh $PACKER_PID logs/server.log server &
+          PID=$!
           packer build -only xenserver-iso.server \
           -var xcp_keep=always \
           -var xen_api_port=${{ env.port_mapping_443 }} \
           -var xen_ssh_port=${{ env.port_mapping_22 }} \
-          18 &
+          18
           
-          PACKER_PID=$!
-          sleep 120
-          ./take_screenshots.sh $PACKER_PID logs/server.log server
+          kill $PID
         env:
            PACKER_LOG_FILE: logs/server.log
           
