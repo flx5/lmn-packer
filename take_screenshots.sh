@@ -1,8 +1,7 @@
 #!/bin/bash
 
-PACKER_PID=$1
-LOGFILE=$2
-PREFIX=$3
+LOGFILE=$1
+PREFIX=$2
 
 mkdir -p screenshots
 

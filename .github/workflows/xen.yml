@@ -14,13 +14,13 @@ jobs:
       - name: Create directories
         run: mkdir -p logs screenshots
       - name: Build XCP-NG VM
+        env:
+           PACKER_LOG_FILE: logs/xcp-ng.log
         run: |
-           ./take_screenshots.sh $PACKER_PID logs/xcp-ng.log xen &
+           ./take_screenshots.sh logs/xcp-ng.log xen &
            PID=$!
            packer build -only qemu.xcp-ng -var headless=true build_infrastructure
            kill $PID
-        env:
-           PACKER_LOG_FILE: logs/xcp-ng.log
       - name: Create overlay disk
         run: qemu-img create -f qcow2 -b xcp-ng output-xcp-ng/disk.qcow2
       - name: Start XCP-NG VM
@@ -46,8 +46,10 @@ jobs:
         run: packer init 18
         
       - name: Build OPNSense
+        env:
+           PACKER_LOG_FILE: logs/opnsense.log
         run: |
-          ./take_screenshots.sh $PACKER_PID logs/opnsense.log opnsense &
+          ./take_screenshots.sh logs/opnsense.log opnsense &
           PID=$!
           packer build -only xenserver-iso.opnsense \
           -var xcp_keep=always \
@@ -56,8 +58,6 @@ jobs:
           18
           
           kill $PID
-        env:
-           PACKER_LOG_FILE: logs/opnsense.log
       - name: Start OPNSense
         run: |
           ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
@@ -65,8 +65,10 @@ jobs:
           ssh root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
           
       - name: Build Server
+        env:
+           PACKER_LOG_FILE: logs/server.log
         run: |
-          ./take_screenshots.sh $PACKER_PID logs/server.log server &
+          ./take_screenshots.sh logs/server.log server &
           PID=$!
           packer build -only xenserver-iso.server \
           -var xcp_keep=always \
@@ -75,8 +77,6 @@ jobs:
           18
           
           kill $PID
-        env:
-           PACKER_LOG_FILE: logs/server.log
           
       - name: List output
         run: |
