@@ -148,7 +148,8 @@ source "virtualbox-iso" "opnsense" {
   shutdown_command = "shutdown -p now"
 
   vboxmanage = [
-    ["modifyvm", "{{.Name}}", "--nic2", "hostonly", "--hostonlyadapter2", var.vbox_internal_net]
+    ["modifyvm", "{{.Name}}", "--nic2", "hostonly", "--hostonlyadapter2", var.vbox_internal_net],
+    ["modifyvm", "{{.Name}}", "--paravirtprovider", "kvm"]
   ]
 
 }
@@ -177,7 +178,7 @@ source "xenserver-iso" "opnsense" {
   # 25 GB
   disk_size = 25600
 
-  boot_wait = "5s"
+  boot_wait = "1m"
 
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
@@ -206,6 +207,7 @@ build {
 
     content {
       name = "opnsense"
+      /*
       boot_command = [
         "<esc><wait>",
         "boot -s<wait>",
@@ -215,6 +217,11 @@ build {
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",
         source.value.wan_configure,
+        "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
+      ]*/
+      
+      boot_command = [
+        "s<wait>",
         "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
       ]
 
