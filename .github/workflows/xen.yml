@@ -21,13 +21,13 @@ jobs:
            PID=$!
            packer build -only qemu.xcp-ng -var headless=true build_infrastructure
            kill $PID
-      - name: Create overlay disk
-        run: qemu-img create -f qcow2 -b xcp-ng output-xcp-ng/disk.qcow2
+      - name: Convert
+        run: qemu-img convert output-xcp-ng/xcp-ng output-xcp-ng/xcp-ng.raw
         
       - name: Start XCP-NG VM
         run: |
           qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp 8,sockets=2,cores=4  \
-          -drive file=output-xcp-ng/disk.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+          -drive file=output-xcp-ng/xcp-ng.raw,if=virtio,cache=writeback,discard=ignore,format=raw \
           -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443 \
           -device virtio-net,netdev=user.0 \
           -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
