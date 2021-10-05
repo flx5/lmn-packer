@@ -178,7 +178,7 @@ source "xenserver-iso" "opnsense" {
   # 25 GB
   disk_size = 25600
 
-  boot_wait = "3m"
+  boot_wait = "5m"
 
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
