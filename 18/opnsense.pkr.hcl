@@ -91,7 +91,7 @@ source "proxmox-iso" "opnsense" {
   unmount_iso = true
   onboot      = true
 
-  boot_wait = "5s"
+  boot_wait = "3m"
 
   ssh_timeout  = "20m"
   ssh_host         = "10.0.0.254"
@@ -129,7 +129,7 @@ source "virtualbox-iso" "opnsense" {
   # 25 GB
   disk_size = 25600
 
-  boot_wait = "5s"
+  boot_wait = "3m"
 
   # For some weird reason packer keeps overwriting the ssh_host with 127.0.0.1.
   # The workaround connects to the target as a fake "bastion host" and then packer can use the loopback device...
@@ -178,7 +178,7 @@ source "xenserver-iso" "opnsense" {
   # 25 GB
   disk_size = 25600
 
-  boot_wait = "1m"
+  boot_wait = "3m"
 
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
@@ -207,22 +207,14 @@ build {
 
     content {
       name = "opnsense"
-      /*
-      boot_command = [
-        "<esc><wait>",
-        "boot -s<wait>",
-        # Wait for quite some time just to be sure (on nested virtualization this is slow...)
-        "<enter><wait60><wait60>",
-        "/bin/sh<enter><wait>",
-        "mdmfs -s 100m md1 /tmp<enter><wait>",
-        "mdmfs -s 100m md2 /mnt<enter><wait>",
-        source.value.wan_configure,
-        "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
-      ]*/
       
       boot_command = [
         "s<wait>",
-        "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
+        "mdmfs -s 100m md1 /tmp<enter><wait>",
+        "mdmfs -s 100m md2 /mnt<enter><wait>",
+        source.value.wan_configure,
+        "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig<enter>",
+        "bsdinstall script /tmp/installerconfig<enter>"
       ]
 
       http_content = {
