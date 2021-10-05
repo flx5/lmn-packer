@@ -27,7 +27,9 @@ jobs:
       - name: Start XCP-NG VM
         run: |
           qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp 8,sockets=2,cores=4  \
-          -drive file=output-xcp-ng/xcp-ng.raw,if=virtio,cache=writeback,discard=ignore,format=raw \
+          -object iothread,id=io1 \
+          -device virtio-blk-pci,drive=disk0,iothread=io1 \
+          -drive if=none,id=disk0,cache=none,format=raw,aio=threads,file=output-xcp-ng/xcp-ng.raw \
           -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443 \
           -device virtio-net,netdev=user.0 \
           -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
