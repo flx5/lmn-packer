@@ -261,6 +261,8 @@ build {
       "reboot"
     ]
     
+    # skip clean or packer will time out on ci
+    skip_clean = true
     pause_after = "5m"
   }
 
