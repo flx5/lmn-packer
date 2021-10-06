@@ -260,6 +260,8 @@ build {
     inline = [
       "reboot"
     ]
+    
+    pause_after = "5m"
   }
 
   provisioner "shell" {
@@ -292,7 +294,7 @@ build {
     expect_disconnect = true
     
     # Give the system time to come fully up before shutdown
-    pause_after = "2m"
+    pause_after = "5m"
 
     inline = [
       # Run fsck offline only, otherwise ssh is available while running fsck...
