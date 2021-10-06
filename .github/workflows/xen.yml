@@ -21,8 +21,8 @@ jobs:
            PID=$!
            packer build -only qemu.xcp-ng -var headless=true build_infrastructure
            kill $PID
-      - name: Convert
-        run: qemu-img convert output-xcp-ng/xcp-ng output-xcp-ng/xcp-ng.raw
+      - name: Convert to non sparse raw
+        run: qemu-img convert -S 0 output-xcp-ng/xcp-ng output-xcp-ng/xcp-ng.raw
         
       - name: Start XCP-NG VM
         run: |
