@@ -52,7 +52,7 @@ jobs:
         env:
            PACKER_LOG_PATH: logs/opnsense.log
         run: |
-          ./take_screenshots.sh logs/opnsense.log opnsense 5 &
+          ./take_screenshots.sh logs/opnsense.log opnsense 10 &
           PID=$!
           packer build -only xenserver-iso.opnsense \
           -var xcp_keep=always \
