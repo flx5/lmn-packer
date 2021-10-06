@@ -17,7 +17,7 @@ jobs:
         env:
            PACKER_LOG_PATH: logs/xcp-ng.log
         run: |
-           ./take_screenshots.sh logs/xcp-ng.log xen &
+           ./take_screenshots.sh logs/xcp-ng.log xen 60 &
            PID=$!
            packer build -only qemu.xcp-ng -var headless=true build_infrastructure
            kill $PID
@@ -52,7 +52,7 @@ jobs:
         env:
            PACKER_LOG_PATH: logs/opnsense.log
         run: |
-          ./take_screenshots.sh logs/opnsense.log opnsense &
+          ./take_screenshots.sh logs/opnsense.log opnsense 5 &
           PID=$!
           packer build -only xenserver-iso.opnsense \
           -var xcp_keep=always \
@@ -71,7 +71,7 @@ jobs:
         env:
            PACKER_LOG_PATH: logs/server.log
         run: |
-          ./take_screenshots.sh logs/server.log server &
+          ./take_screenshots.sh logs/server.log server 60 &
           PID=$!
           packer build -only xenserver-iso.server \
           -var xcp_keep=always \
