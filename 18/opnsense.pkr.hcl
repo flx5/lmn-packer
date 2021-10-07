@@ -178,15 +178,15 @@ source "xenserver-iso" "opnsense" {
   # 25 GB
   disk_size = 25600
 
-  boot_wait = "1m"
+  boot_wait = "0s"
 
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
   ssh_host         = "10.0.0.254"
 
   shutdown_command = "shutdown -p now"
-  ssh_timeout = "30m"
-  
+ # ssh_timeout = "30m"
+  ssh_timeout = "5m"
   sr_iso_name = "Local storage"
   sr_name = "Local storage"
   
@@ -207,7 +207,7 @@ build {
 
     content {
       name = "opnsense"
-      
+     /* 
       boot_command = [
         "<esc><wait>",
         "boot -s<wait>",
@@ -218,7 +218,7 @@ build {
         "mdmfs -s 100m md2 /mnt<enter><wait>",
         source.value.wan_configure,
         "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
-      ]
+      ]*/
 
       http_content = {
         "/config.xml" = templatefile("opnsense/config.xml", {
