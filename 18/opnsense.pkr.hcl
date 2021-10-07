@@ -210,7 +210,7 @@ build {
     
       boot_command = [
         # Make sure we wait at the menu
-        "<endOn><wait2m><endOff>"
+        "<endOn><wait2m><endOff>",
         # Exit menu
         "<esc><wait>",
         # Enter boot sequence
