@@ -6,6 +6,9 @@ server = {
   root_password = "Muster!"
 
   boot_command = [
+    # Stop at boot menu
+    "<endOn><wait2m><endOff>",
+    # Enter boot command
     "<esc><esc><wait5><enter><wait5>",
     "/install/vmlinuz noapic ",
     "initrd=/install/initrd.gz ",

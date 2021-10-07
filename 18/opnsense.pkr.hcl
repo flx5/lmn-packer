@@ -178,15 +178,15 @@ source "xenserver-iso" "opnsense" {
   # 25 GB
   disk_size = 25600
 
-  boot_wait = "0s"
+  boot_wait = "5s"
 
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
   ssh_host         = "10.0.0.254"
 
   shutdown_command = "shutdown -p now"
- # ssh_timeout = "30m"
-  ssh_timeout = "5m"
+  ssh_timeout = "30m"
+  
   sr_iso_name = "Local storage"
   sr_name = "Local storage"
   
@@ -207,18 +207,22 @@ build {
 
     content {
       name = "opnsense"
-     /* 
+    
       boot_command = [
+        # Make sure we wait at the menu
+        "<endOn><wait2m><endOff>"
+        # Exit menu
         "<esc><wait>",
-        "boot -s<wait>",
+        # Enter boot sequence
+        "boot -s<enter>",
         # Wait for quite some time just to be sure (on nested virtualization this is slow...)
-        "<enter><wait60><wait60>",
+        "<wait2m>",
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",
         source.value.wan_configure,
         "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
-      ]*/
+      ]
 
       http_content = {
         "/config.xml" = templatefile("opnsense/config.xml", {
