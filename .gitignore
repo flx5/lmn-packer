@@ -8,3 +8,5 @@ packer_*
 .idea
 
 venv
+
+tools/xva-img/xva-img

@@ -197,15 +197,52 @@ build {
        ]
    }
   
+   post-processor "shell-local" {
+        inline = ["cp hypervisor/virtualbox/packer-opnsense-virtualbox.ovf output-opnsense-virtualbox"]
+   }
+  
    post-processor "checksum" {
     checksum_types = ["sha256"]
     output = "output-opnsense-virtualbox/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
   }
   }
   
-  # TODO ovf
   # Afer import run vboxmanage modifyvm packer-opnsense --natnet1 "192.168.122/24" to fix the wan address range
 }
+
+# Don't run this on the same host as qemu because virtualbox requires own internal network bridge.
+source "virtualbox-ovf" "opnsense-virtualbox-test" {
+  source_path = "output-opnsense-virtualbox/packer-opnsense-virtualbox.ovf"
+
+  # For some weird reason packer keeps overwriting the ssh_host with 127.0.0.1.
+  # The workaround connects to the target as a fake "bastion host" and then packer can use the loopback device...
+
+  ssh_host         = "127.0.0.1"
+  ssh_port         = 22
+  ssh_timeout      = "20m"
+  skip_nat_mapping = true
+
+  ssh_username         = "root"
+  ssh_password         = local.opnsense.root_password
+  ssh_bastion_host     = "10.0.0.254"
+  ssh_bastion_username = "root"
+  ssh_bastion_password = local.opnsense.root_password
+
+  shutdown_command = "shutdown -p now"
+  guest_additions_mode = "disable"
+  
+  vboxmanage = [
+    # TODO Respect red network config
+    ["modifyvm", "{{.Name}}", "--natnet1", "192.168.122/24"]
+  ]
+  
+  format = "ova"
+}
+
+build {
+  sources = ["sources.virtualbox-ovf.opnsense-virtualbox-test"]
+}
+
 
 source "qemu" "opnsense-qemu" {
   disk_image = true
@@ -247,23 +284,105 @@ build {
 
     inline = [
       "pkg install -y os-qemu-guest-agent"
+      "echo 'qemu_guest_agent_enable=\"YES\"' >> /etc/rc.conf",
+      "echo 'qemu_guest_agent_flags=\"-d -v -l /var/log/qemu-ga.log\"' >> /etc/rc.conf",
+      "kldload virtio_console",
+      "echo virtio_console_load=\"YES\" >> /boot/loader.conf",
+      "service qemu-guest-agent start",
+      "service qemu-guest-agent status"
     ]
   }
   
   post-processors {
    post-processor "shell-local" {
-        inline = ["qemu-img convert -f qcow2 -O qcow2 output-opnsense-qemu/packer-opnsense-qemu output-opnsense-virtualbox/packer-opnsense-qemu.qcow2"]
+        inline = ["qemu-img convert -f qcow2 -O qcow2 output-opnsense-qemu/packer-opnsense-qemu output-opnsense-qemu/packer-opnsense-qemu.qcow2"]
    }
    
    post-processor "artifice" {
        files = [
-          "output-opnsense-virtualbox/packer-opnsense-qemu.qcow2"
+          "output-opnsense-qemu/packer-opnsense-qemu.qcow2"
        ]
    }
   
    post-processor "checksum" {
     checksum_types = ["sha256"]
     output = "output-opnsense-qemu/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+  }
+  }
+  
+  
+  /*
+   qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output-opnsense-qemu/packer-opnsense-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24  -device virtio-net,netdev=user.0 -netdev bridge,id=user.1,br=virbr5 -device virtio-net,netdev=user.1
+  */
+}
+
+
+source "qemu" "opnsense-xen" {
+  disk_image = true
+  use_backing_file = true
+  iso_url = "output-opnsense/packer-opnsense"
+  
+  # TODO Can the previous step generate checksum?
+  iso_checksum = "none"
+
+  headless             = "${var.headless}"
+
+  ssh_timeout      = "2m"
+  ssh_host   = "10.0.0.254"
+  ssh_port   = 22
+  ssh_username         = "root"
+  ssh_password         = local.opnsense.root_password
+  skip_nat_mapping = true
+
+  shutdown_command = "shutdown -p now"
+
+  qemuargs = [
+    # Wan
+    [ "-netdev", "user,id=user.0,net=${var.red_network}"],
+    [ "-device", "virtio-net,netdev=user.0" ],
+    
+    # Lan
+    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-device", "virtio-net,netdev=user.1"]
+  ]
+}
+
+
+build {
+   sources = ["qemu.opnsense-xen"]
+   
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+
+    inline = [
+      "sed -i '' 's/vtbd0/ada0/' /etc/fstab",
+      "sed -i '' 's/vtnet0/xn0/' /conf/config.xml",
+      "sed -i '' 's/vtnet1/xn1/' /conf/config.xml",
+      "pkg install -y os-xen"
+    ]
+  }
+  
+  post-processors {
+   post-processor "shell-local" {
+        inline = [
+        "qemu-img convert -f qcow2 -O raw output-opnsense-xen/packer-opnsense-xen output-opnsense-xen/packer-opnsense-xen.raw",
+        "mkdir output-opnsense-xen/Ref:37/",
+        "./tools/xva-img/xva-img -p disk-import output-opnsense-xen/Ref\:37/ output-opnsense-xen/packer-opnsense-xen.raw",
+        #"cp hypervisor/xen/ova.xml output-opnsense-xen/ova.xml",
+        "./tools/xva-img/xva-img -p package output-opnsense-xen/lmn7-opnsense.xva hypervisor/xen/ova.xml output-opnsense-xen/Ref\:37/"
+        ]
+   }
+   
+   post-processor "artifice" {
+       files = [
+          "output-opnsense-xen/lmn7-opnsense.xva"
+       ]
+   }
+  
+   post-processor "checksum" {
+    checksum_types = ["sha256"]
+    output = "output-opnsense-xen/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
   }
   }
   
