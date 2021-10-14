@@ -27,6 +27,11 @@ variable "red_network" {
   default = "192.168.122.0/24"
 }
 
+variable "qemu_bridge" {
+  type    = string
+  default = "virbr5"
+}
+
 source "qemu" "opnsense" {
   iso_url      = local.opnsense.iso_url
   iso_checksum = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
@@ -55,7 +60,7 @@ source "qemu" "opnsense" {
     [ "-device", "virtio-net,netdev=user.0" ],
     
     # Lan
-    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
     [ "-device", "virtio-net,netdev=user.1"]
   ]
   
@@ -167,7 +172,7 @@ source "qemu" "opnsense-virtualbox" {
     [ "-device", "virtio-net,netdev=user.0" ],
     
     # Lan
-    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
     [ "-device", "virtio-net,netdev=user.1"]
   ]
 }
@@ -269,7 +274,7 @@ source "qemu" "opnsense-qemu" {
     [ "-device", "virtio-net,netdev=user.0" ],
     
     # Lan
-    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
     [ "-device", "virtio-net,netdev=user.1"]
   ]
 }
@@ -283,7 +288,7 @@ build {
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
 
     inline = [
-      "pkg install -y os-qemu-guest-agent"
+      "pkg install -y os-qemu-guest-agent",
       "echo 'qemu_guest_agent_enable=\"YES\"' >> /etc/rc.conf",
       "echo 'qemu_guest_agent_flags=\"-d -v -l /var/log/qemu-ga.log\"' >> /etc/rc.conf",
       "kldload virtio_console",
@@ -342,7 +347,7 @@ source "qemu" "opnsense-xen" {
     [ "-device", "virtio-net,netdev=user.0" ],
     
     # Lan
-    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
     [ "-device", "virtio-net,netdev=user.1"]
   ]
 }
@@ -367,10 +372,10 @@ build {
    post-processor "shell-local" {
         inline = [
         "qemu-img convert -f qcow2 -O raw output-opnsense-xen/packer-opnsense-xen output-opnsense-xen/packer-opnsense-xen.raw",
-        "mkdir output-opnsense-xen/Ref:37/",
-        "./tools/xva-img/xva-img -p disk-import output-opnsense-xen/Ref\:37/ output-opnsense-xen/packer-opnsense-xen.raw",
+        "mkdir 'output-opnsense-xen/Ref:37/'",
+        "./tools/xva-img/xva-img -p disk-import 'output-opnsense-xen/Ref:37/' output-opnsense-xen/packer-opnsense-xen.raw",
         #"cp hypervisor/xen/ova.xml output-opnsense-xen/ova.xml",
-        "./tools/xva-img/xva-img -p package output-opnsense-xen/lmn7-opnsense.xva hypervisor/xen/ova.xml output-opnsense-xen/Ref\:37/"
+        "./tools/xva-img/xva-img -p package output-opnsense-xen/lmn7-opnsense.xva hypervisor/xen/ova.xml 'output-opnsense-xen/Ref:37/'"
         ]
    }
    

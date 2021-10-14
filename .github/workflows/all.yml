@@ -1,9 +1,7 @@
-name: XCP-NG
+name: Build all
 
-#on:
-#  push:
-on: 
-  workflow_dispatch:
+on:
+  push:
 
 jobs:
   qemu:
@@ -11,10 +9,45 @@ jobs:
     env: 
       PACKER_LOG: 1
       PACKER_CACHE_DIR: /home/github/actions-runner/packer_cache/
+      PKR_VAR_qemu_bridge: vmbr1
     steps:
       - uses: actions/checkout@v2
+        submodules: true
       - name: Create directories
         run: mkdir -p logs screenshots
+        
+      - name: Prepare tools
+        working-directory: ./tools/xva-img/
+        run: |
+          cmake .
+          make
+        
+      - name: Build OPNSense Base
+        env:
+           PACKER_LOG_PATH: logs/opnsense-base.log
+        run: |
+           ./take_screenshots.sh logs/opnsense-base.log opnsense-base 60 &
+           PID=$!
+           packer build -only qemu.opnsense -var headless=true 18
+           kill $PID
+
+      - name: List opnsense-base artifacts
+        run: ls -lh output-opnsense
+        
+      - name: Convert to virtualbox
+        env:
+           PACKER_LOG_PATH: logs/opnsense-virtualbox.log
+        run: packer build -only qemu.opnsense-virtualbox -var headless=true 18
+        
+        # TODO Test on virtualbox with virtualbox-ovf.opnsense-virtualbox-test
+        
+      - name: Convert to Xen
+        env:
+           PACKER_LOG_PATH: logs/opnsense-xen.log
+        run: packer build -only qemu.opnsense-xen -var headless=true 18
+        
+        # TODO Test import on xen
+        
       - name: Build XCP-NG VM
         env:
            PACKER_LOG_PATH: logs/xcp-ng.log
@@ -23,15 +56,13 @@ jobs:
            PID=$!
            packer build -only qemu.xcp-ng -var headless=true build_infrastructure
            kill $PID
-      - name: Convert to non sparse raw
-        run: qemu-img convert -S 0 output-xcp-ng/xcp-ng output-xcp-ng/xcp-ng.raw
-        
+           
       - name: Start XCP-NG VM
         run: |
           qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 8192 -smp 8,sockets=2,cores=4  \
           -object iothread,id=io1 \
           -device virtio-blk-pci,drive=disk0,iothread=io1 \
-          -drive if=none,id=disk0,cache=none,format=raw,aio=threads,file=output-xcp-ng/xcp-ng.raw \
+          -drive if=none,id=disk0,cache=none,format=raw,aio=threads,file=output-xcp-ng/xcp-ng \
           -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443 \
           -device virtio-net,netdev=user.0 \
           -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
@@ -47,46 +78,15 @@ jobs:
           done <<< "$ports"
       - name: Wait for xcp-ng to boot
         run: sleep 300
-      - name: Install packer plugins
-        run: packer init 18
         
-      - name: Build OPNSense
-        env:
-           PACKER_LOG_PATH: logs/opnsense.log
+      - name: Import VM
         run: |
-          ./take_screenshots.sh logs/opnsense.log opnsense 10 &
-          PID=$!
-          packer build -only xenserver-iso.opnsense \
-          -var xcp_keep=always \
-          -var xen_api_port=${{ env.port_mapping_443 }} \
-          -var xen_ssh_port=${{ env.port_mapping_22 }} \
-          18
-          
-          kill $PID
-      - name: Start OPNSense
-        run: |
+          sshpass -p 'Muster!' scp -P ${{ env.port_mapping_22 }} output-opnsense-xen/lmn7-opnsense.xva root@localhost:/opt/lmn7-opnsense.xva
           sshpass -p 'Muster!' ssh \
             -o "StrictHostKeyChecking no" \
-            -p 42371 \
+            -p ${{ env.port_mapping_22 }} \
             root@localhost \
-            "UUID=$(xe template-list name-label=opnsense --minimal) \
-            && xe template-param-set uuid=$UUID is-a-template=false \
-            && xe vm-list \
-            && xe vm-start uuid=$UUID && xe vm-list"
-          
-      - name: Build Server
-        env:
-           PACKER_LOG_PATH: logs/server.log
-        run: |
-          ./take_screenshots.sh logs/server.log server 60 &
-          PID=$!
-          packer build -only xenserver-iso.server \
-          -var xcp_keep=always \
-          -var xen_api_port=${{ env.port_mapping_443 }} \
-          -var xen_ssh_port=${{ env.port_mapping_22 }} \
-          18
-          
-          kill $PID
+            "xe vm-import /opt/lmn7-opnsense.xva"
           
       - name: List output
         run: |
