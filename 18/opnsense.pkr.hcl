@@ -7,8 +7,6 @@ packer {
   }
 }
 
-# TODO Correct memory / disk size
-
   # FreeBSD Version should match with the opnsense version
   # Typically that information can be found at https://opnsense.org/blog/
 
@@ -21,28 +19,19 @@ locals {
 
   memory        = 1024
   opnsense_release = "21.7"
-
-  sources = {
-    "virtualbox-iso" = {
-      wan_iface   = "em0"
-      lan_iface   = "em1"
-      packages    = "os-virtualbox"
-      wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface em0<enter><wait10>"
-      partitions = "ada0"
-    }
-  }
   }
 }
 
-source "virtualbox-iso" "opnsense" {
-  guest_os_type = "FreeBSD_64"
+variable "red_network" {
+  type    = string
+  default = "192.168.122.0/24"
+}
 
+source "qemu" "opnsense" {
   iso_url      = local.opnsense.iso_url
   iso_checksum = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
 
-  guest_additions_mode = "disable"
   headless             = "${var.headless}"
-  keep_registered      = var.vbox_keep_registered
 
   # TODO Correct memory / disk size
   memory = local.opnsense.memory
@@ -51,118 +40,57 @@ source "virtualbox-iso" "opnsense" {
 
   boot_wait = "5s"
 
-  # For some weird reason packer keeps overwriting the ssh_host with 127.0.0.1.
-  # The workaround connects to the target as a fake "bastion host" and then packer can use the loopback device...
-
-  ssh_host         = "127.0.0.1"
-  ssh_port         = 22
   ssh_timeout      = "20m"
-  skip_nat_mapping = true
-
+  ssh_host   = "10.0.0.254"
+  ssh_port   = 22
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
-  ssh_bastion_host     = "10.0.0.254"
-  ssh_bastion_username = "root"
-  ssh_bastion_password = local.opnsense.root_password
+  skip_nat_mapping = true
 
   shutdown_command = "shutdown -p now"
 
-  vboxmanage = [
-    ["modifyvm", "{{.Name}}", "--nic2", "hostonly", "--hostonlyadapter2", var.vbox_internal_net],
-    ["modifyvm", "{{.Name}}", "--paravirtprovider", "kvm"]
-  ]
-}
-
-source "virtualbox-ovf" "opnsense-qemu" {
-  checksum = "none"
-  source_path  = "output-opnsense/packer-opnsense-1634205698.ovf"
-
-  guest_additions_mode = "disable"
-  headless             = "${var.headless}"
-  keep_registered      = var.vbox_keep_registered
-
-
-  # For some weird reason packer keeps overwriting the ssh_host with 127.0.0.1.
-  # The workaround connects to the target as a fake "bastion host" and then packer can use the loopback device...
-
-  ssh_host         = "127.0.0.1"
-  ssh_port         = 22
-  ssh_timeout      = "20m"
-  skip_nat_mapping = true
-
-  ssh_username         = "root"
-  ssh_password         = local.opnsense.root_password
-  ssh_bastion_host     = "10.0.0.254"
-  ssh_bastion_username = "root"
-  ssh_bastion_password = local.opnsense.root_password
-
-  shutdown_command = "shutdown -p now"
-
-  vboxmanage = [
-    ["modifyvm", "{{.Name}}", "--nic2", "hostonly", "--hostonlyadapter2", var.vbox_internal_net],
-    ["modifyvm", "{{.Name}}", "--paravirtprovider", "kvm"]
-  ]
-}
-
-
-build {
-   sources = ["virtualbox-ovf.opnsense-qemu"]
-   
-  provisioner "shell" {
-    # FreeBSD uses tcsh
-    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-
-    inline = [
-      "sed -i '' 's/ada0/vtbd0/' /etc/fstab",
-      "sed -i '' 's/em0/vtnet0/' /conf/config.xml",
-      "sed -i '' 's/em1/vtnet1/' /conf/config.xml"
-    ]
-  }
-  
-  /*
-   qemu-img convert output-opnsense-qemu/packer-opnsense-qemu-1634209661-disk001.vmdk output-opnsense-qemu/disk001.qcow2 -O qcow2
-  qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output-opnsense-qemu/disk001.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443  -device virtio-net,netdev=user.0 -netdev user,id=user.1,net=10.0.0.0/8 -device virtio-net,netdev=user.1
-  */
-}
-
-build {
-
-  dynamic "source" {
-    for_each = local.opnsense.sources
-
-    labels = ["${source.key}.opnsense"]
-
-    content {
-      name = "opnsense"
+  qemuargs = [
+    # Wan
+    [ "-netdev", "user,id=user.0,net=${var.red_network}"],
+    [ "-device", "virtio-net,netdev=user.0" ],
     
+    # Lan
+    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-device", "virtio-net,netdev=user.1"]
+  ]
+  
       boot_command = [
         # Exit menu
         "<esc><wait>",
         # Enter boot sequence
         "boot -s<enter>",
-        "<wait10s>",
+        "<wait20s>",
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",
-        source.value.wan_configure,
-        "fetch -o /tmp/installerconfig http://{{ .HTTPIP }}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
+        "dhclient -l /tmp/dhclient.lease.wan_iface vtnet0<enter><wait10>",
+        "fetch -o /tmp/installerconfig http://${cidrhost(var.red_network,2)}:{{ .HTTPPort }}/installerconfig && bsdinstall script /tmp/installerconfig<enter>"
       ]
 
       http_content = {
         "/config.xml" = templatefile("opnsense/config.xml", {
           root_pw_hash = bcrypt(local.opnsense.root_password),
-          wan_iface    = source.value.wan_iface,
-          lan_iface    = source.value.lan_iface
+          wan_iface    = "vtnet0",
+          lan_iface    = "vtnet1"
           }),
         "/installerconfig" = templatefile("opnsense/installerconfig.pkrtpl.hcl", { 
                                    root_pw = local.opnsense.root_password, 
-                                   wan_iface = source.value.wan_iface, 
-                                   lan_iface = source.value.lan_iface, 
-                                   partitions =  source.value.partitions
+                                   wan_iface = "vtnet0", 
+                                   lan_iface = "vtnet1", 
+                                   partitions =  "vtbd0"
                              })
       }
-    }
-  }
+}
+
+
+build {
+
+  sources = ["qemu.opnsense"]
   
   provisioner "shell" {
     # FreeBSD uses tcsh
@@ -177,7 +105,7 @@ build {
       "sh ./opnsense-bootstrap.sh.in -r ${local.opnsense.opnsense_release} -y",
       # Write config after running bootstrap because bootstrap would delete the
       "mkdir -p /conf",
-      "fetch -o /conf/config.xml http://${build.PackerHTTPAddr}/config.xml"
+      "fetch -o /conf/config.xml http://${cidrhost(var.red_network,2)}:${build.PackerHTTPPort}/config.xml"
     ]
   }
   
@@ -204,6 +132,143 @@ build {
       "echo 'keymap=\"de.noacc.kbd\"' >> /etc/rc.conf"
     ]
   }
+  
+   post-processor "checksum" {
+    checksum_types = ["sha256"]
+    output = "packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+  }
 }
 
 
+
+source "qemu" "opnsense-virtualbox" {
+  disk_image = true
+  
+  use_backing_file = true
+  iso_url = "output-opnsense/packer-opnsense"
+  
+  # TODO Can the previous step generate checksum?
+  iso_checksum = "none"
+
+  headless             = "${var.headless}"
+
+  ssh_timeout      = "2m"
+  ssh_host   = "10.0.0.254"
+  ssh_port   = 22
+  ssh_username         = "root"
+  ssh_password         = local.opnsense.root_password
+  skip_nat_mapping = true
+
+  shutdown_command = "shutdown -p now"
+
+  qemuargs = [
+    # Wan
+    [ "-netdev", "user,id=user.0,net=${var.red_network}"],
+    [ "-device", "virtio-net,netdev=user.0" ],
+    
+    # Lan
+    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-device", "virtio-net,netdev=user.1"]
+  ]
+}
+
+build {
+   sources = ["qemu.opnsense-virtualbox"]
+   
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+
+    inline = [
+      "sed -i '' 's/vtbd0/ada0/' /etc/fstab",
+      "sed -i '' 's/vtnet0/em0/' /conf/config.xml",
+      "sed -i '' 's/vtnet1/em1/' /conf/config.xml",
+      "pkg install -y os-virtualbox"
+    ]
+  }
+  post-processors {
+   post-processor "shell-local" {
+        inline = ["qemu-img convert -f qcow2 -O vmdk output-opnsense-virtualbox/packer-opnsense-virtualbox output-opnsense-virtualbox/packer-opnsense-virtualbox.vmdk"]
+   }
+   
+   post-processor "artifice" {
+       files = [
+          "output-opnsense-virtualbox/packer-opnsense-virtualbox.vmdk"
+       ]
+   }
+  
+   post-processor "checksum" {
+    checksum_types = ["sha256"]
+    output = "output-opnsense-virtualbox/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+  }
+  }
+  
+  # TODO ovf
+  # Afer import run vboxmanage modifyvm packer-opnsense --natnet1 "192.168.122/24" to fix the wan address range
+}
+
+source "qemu" "opnsense-qemu" {
+  disk_image = true
+  use_backing_file = true
+  iso_url = "output-opnsense/packer-opnsense"
+  
+  # TODO Can the previous step generate checksum?
+  iso_checksum = "none"
+
+  headless             = "${var.headless}"
+
+  ssh_timeout      = "2m"
+  ssh_host   = "10.0.0.254"
+  ssh_port   = 22
+  ssh_username         = "root"
+  ssh_password         = local.opnsense.root_password
+  skip_nat_mapping = true
+
+  shutdown_command = "shutdown -p now"
+
+  qemuargs = [
+    # Wan
+    [ "-netdev", "user,id=user.0,net=${var.red_network}"],
+    [ "-device", "virtio-net,netdev=user.0" ],
+    
+    # Lan
+    [ "-netdev", "bridge,id=user.1,br=virbr5"],
+    [ "-device", "virtio-net,netdev=user.1"]
+  ]
+}
+
+
+build {
+   sources = ["qemu.opnsense-qemu"]
+   
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+
+    inline = [
+      "pkg install -y os-qemu-guest-agent"
+    ]
+  }
+  
+  post-processors {
+   post-processor "shell-local" {
+        inline = ["qemu-img convert -f qcow2 -O qcow2 output-opnsense-qemu/packer-opnsense-qemu output-opnsense-virtualbox/packer-opnsense-qemu.qcow2"]
+   }
+   
+   post-processor "artifice" {
+       files = [
+          "output-opnsense-virtualbox/packer-opnsense-qemu.qcow2"
+       ]
+   }
+  
+   post-processor "checksum" {
+    checksum_types = ["sha256"]
+    output = "output-opnsense-qemu/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+  }
+  }
+  
+  
+  /*
+   qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output-opnsense-qemu/packer-opnsense-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24  -device virtio-net,netdev=user.0 -netdev bridge,id=user.1,br=virbr5 -device virtio-net,netdev=user.1
+  */
+}
