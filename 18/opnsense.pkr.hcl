@@ -30,87 +30,7 @@ locals {
       wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface em0<enter><wait10>"
       partitions = "ada0"
     }
-
-    "proxmox-iso" = {
-      wan_iface = "vtnet0"
-      lan_iface = "vtnet1"
-      packages  = "os-qemu-guest-agent"
-
-      wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface vtnet0<enter><wait10>"
-      partitions = "da0"
-    }
-    
-    # TODO Fix these values
-    "xenserver-iso" = {
-      wan_iface = "xn0"
-      lan_iface = "xn1"
-      packages  = "os-xen"
-
-      wan_configure = "dhclient -l /tmp/dhclient.lease.wan_iface xn0<enter><wait10>"
-      partitions = "ada0"
-    }
   }
-  }
-}
-
-source "proxmox-iso" "opnsense" {
-  proxmox_url              = "https://${var.proxmox_host}/api2/json"
-  username                 = var.proxmox_user
-  password                 = var.proxmox_password
-  insecure_skip_tls_verify = true
-  node                     = var.proxmox_node
-
-  vm_id   = 200
-  vm_name = "lmn7-opnsense"
-
-  template_description = "Linuxmuster.net OPNSense Appliance"
-  qemu_agent           = "true"
-
-  iso_url          = local.opnsense.iso_url
-  iso_checksum     = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
-  iso_storage_pool = "${var.proxmox_iso_pool}"
-
-  # TODO Correct memory / disk size
-  memory = local.opnsense.memory
-
-  cpu_type = "host"
-  cores    = 2
-  sockets  = 2
-
-  os = "l26"
-
-  scsi_controller = "virtio-scsi-pci"
-
-  disks {
-    storage_pool      = "${var.proxmox_disk_pool}"
-    storage_pool_type = "${var.proxmox_disk_pool_type}"
-    disk_size         = "25G"
-    format            = var.proxmox_disk_format
-  }
-
-  unmount_iso = true
-  onboot      = true
-
-  boot_wait = "5s"
-
-  ssh_timeout  = "20m"
-  ssh_host         = "10.0.0.254"
-  ssh_username = "root"
-  ssh_password = local.opnsense.root_password
-
-  ssh_bastion_host     = "127.0.0.1"
-  ssh_bastion_port     = 2222
-  ssh_bastion_username = "root"
-  ssh_bastion_password = local.opnsense.root_password
-
-  network_adapters {
-    bridge = "vmbr0"
-    model  = "virtio"
-  }
-
-  network_adapters {
-    bridge = "vmbr1"
-    model  = "virtio"
   }
 }
 
@@ -151,51 +71,58 @@ source "virtualbox-iso" "opnsense" {
     ["modifyvm", "{{.Name}}", "--nic2", "hostonly", "--hostonlyadapter2", var.vbox_internal_net],
     ["modifyvm", "{{.Name}}", "--paravirtprovider", "kvm"]
   ]
-
 }
 
-source "xenserver-iso" "opnsense" { 
-  remote_host = var.xen_host
-  remote_port = var.xen_api_port
-  remote_ssh_port = var.xen_ssh_port
-  remote_username = var.xen_user
-  remote_password = var.xen_password
-  
-  vm_name = "opnsense"
+source "virtualbox-ovf" "opnsense-qemu" {
+  checksum = "none"
+  source_path  = "output-opnsense/packer-opnsense-1634205698.ovf"
 
-  # Xenserver doesn't have an FreeBSD template
-  clone_template = "Other install media"
+  guest_additions_mode = "disable"
+  headless             = "${var.headless}"
+  keep_registered      = var.vbox_keep_registered
 
-  iso_url      = local.opnsense.iso_url
-  iso_checksum     = "${local.opnsense.iso_checksum_type}:${local.opnsense.iso_checksum}"
-  
-  tools_iso_name = "guest-tools.iso"
-  
-  
-  # TODO Correct memory / disk size / cores
-  vm_memory = local.opnsense.memory
 
-  # 25 GB
-  disk_size = 25600
+  # For some weird reason packer keeps overwriting the ssh_host with 127.0.0.1.
+  # The workaround connects to the target as a fake "bastion host" and then packer can use the loopback device...
 
-  boot_wait = "5s"
+  ssh_host         = "127.0.0.1"
+  ssh_port         = 22
+  ssh_timeout      = "20m"
+  skip_nat_mapping = true
 
   ssh_username         = "root"
   ssh_password         = local.opnsense.root_password
-  ssh_host         = "10.0.0.254"
+  ssh_bastion_host     = "10.0.0.254"
+  ssh_bastion_username = "root"
+  ssh_bastion_password = local.opnsense.root_password
 
   shutdown_command = "shutdown -p now"
-  ssh_timeout = "30m"
-  
-  sr_iso_name = "Local storage"
-  sr_name = "Local storage"
-  
-  network_names = [
-   "Red",
-   "Green"
+
+  vboxmanage = [
+    ["modifyvm", "{{.Name}}", "--nic2", "hostonly", "--hostonlyadapter2", var.vbox_internal_net],
+    ["modifyvm", "{{.Name}}", "--paravirtprovider", "kvm"]
   ]
+}
+
+
+build {
+   sources = ["virtualbox-ovf.opnsense-qemu"]
+   
+  provisioner "shell" {
+    # FreeBSD uses tcsh
+    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
+
+    inline = [
+      "sed -i '' 's/ada0/vtbd0/' /etc/fstab",
+      "sed -i '' 's/em0/vtnet0/' /conf/config.xml",
+      "sed -i '' 's/em1/vtnet1/' /conf/config.xml"
+    ]
+  }
   
-  keep_vm = var.xcp_keep
+  /*
+   qemu-img convert output-opnsense-qemu/packer-opnsense-qemu-1634209661-disk001.vmdk output-opnsense-qemu/disk001.qcow2 -O qcow2
+  qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output-opnsense-qemu/disk001.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443  -device virtio-net,netdev=user.0 -netdev user,id=user.1,net=10.0.0.0/8 -device virtio-net,netdev=user.1
+  */
 }
 
 build {
@@ -209,14 +136,11 @@ build {
       name = "opnsense"
     
       boot_command = [
-        # Make sure we wait at the menu
-        "<endOn><wait2m><endOff>",
         # Exit menu
         "<esc><wait>",
         # Enter boot sequence
         "boot -s<enter>",
-        # Wait for quite some time just to be sure (on nested virtualization this is slow...)
-        "<wait2m>",
+        "<wait10s>",
         "/bin/sh<enter><wait>",
         "mdmfs -s 100m md1 /tmp<enter><wait>",
         "mdmfs -s 100m md2 /mnt<enter><wait>",
@@ -267,51 +191,17 @@ build {
     inline = [
       "reboot"
     ]
-    
-    # skip clean or packer will time out on ci
-    skip_clean = true
-    pause_after = "5m"
   }
 
   provisioner "shell" {
     # FreeBSD uses tcsh
     execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-
-    inline = [
-      "pkg install -y ${local.opnsense.sources["${source.type}"].packages}"
-    ]
-  }
-
-  provisioner "shell" {
-    only = [ "proxmox-iso.opnsense" ]
-    # FreeBSD uses tcsh
-    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-
-    inline = [
-      "echo 'qemu_guest_agent_enable=\"YES\"' >> /etc/rc.conf",
-      "echo 'qemu_guest_agent_flags=\"-d -v -l /var/log/qemu-ga.log\"' >> /etc/rc.conf",
-      "kldload virtio_console",
-      "echo virtio_console_load=\"YES\" >> /boot/loader.conf",
-      "service qemu-guest-agent start",
-      "service qemu-guest-agent status"
-    ]
-  }
-  
-  provisioner "shell" {
-    # FreeBSD uses tcsh
-    execute_command = "chmod +x {{ .Path }}; env {{ .Vars }} {{ .Path }}"
-    expect_disconnect = true
-    
-    # Give the system time to come fully up before shutdown
-    pause_after = "5m"
 
     inline = [
       # Run fsck offline only, otherwise ssh is available while running fsck...
       "echo 'fsck_y_enable=\"YES\"' >> /etc/rc.conf",
       "echo 'background_fsck=\"NO\"' >> /etc/rc.conf",
-      "echo 'keymap=\"de.noacc.kbd\"' >> /etc/rc.conf",
-      # Reboot into configured opnsense
-      "reboot"
+      "echo 'keymap=\"de.noacc.kbd\"' >> /etc/rc.conf"
     ]
   }
 }
