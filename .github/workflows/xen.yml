@@ -9,6 +9,7 @@ jobs:
     runs-on: [self-hosted, qemu]
     env: 
       PACKER_LOG: 1
+      PACKER_CACHE_DIR: /home/github/actions-runner/packer_cache/
     steps:
       - uses: actions/checkout@v2
       - name: Create directories
@@ -26,7 +27,7 @@ jobs:
         
       - name: Start XCP-NG VM
         run: |
-          qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp 8,sockets=2,cores=4  \
+          qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 8192 -smp 8,sockets=2,cores=4  \
           -object iothread,id=io1 \
           -device virtio-blk-pci,drive=disk0,iothread=io1 \
           -drive if=none,id=disk0,cache=none,format=raw,aio=threads,file=output-xcp-ng/xcp-ng.raw \
@@ -63,9 +64,14 @@ jobs:
           kill $PID
       - name: Start OPNSense
         run: |
-          ssh -o "StrictHostKeyChecking no" root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
-          ssh -o "StrictHostKeyChecking no" root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-start opnsense"
-          ssh -o "StrictHostKeyChecking no" root@localhost -p ${{ env.port_mapping_22 }} -i build_infrastructure/sshKeyFile "xe vm-list"
+          sshpass -p 'Muster!' ssh \
+            -o "StrictHostKeyChecking no" \
+            -p 42371 \
+            root@localhost \
+            "UUID=$(xe template-list name-label=opnsense --minimal) \
+            && xe template-param-set uuid=$UUID is-a-template=false \
+            && xe vm-list \
+            && xe vm-start uuid=$UUID && xe vm-list"
           
       - name: Build Server
         env:
