@@ -44,7 +44,7 @@ jobs:
      ############################################################################################   
         
       - name: Convert to virtualbox
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/virtualbox" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/virtualbox' || startsWith(github.ref, 'refs/tags/') }}
         env:
            PACKER_LOG_PATH: logs/opnsense-virtualbox.log
         run: packer build -only qemu.opnsense-virtualbox -var headless=true vms/opnsense/
@@ -58,19 +58,19 @@ jobs:
      ############################################################################################   
 
       - name: Convert to Xen
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/virtualbox" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/virtualbox' || startsWith(github.ref, 'refs/tags/') }}
         env:
            PACKER_LOG_PATH: logs/opnsense-xen.log
         run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/
               
       - name: Copy XCP-NG VM
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/virtualbox" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/virtualbox' || startsWith(github.ref, 'refs/tags/') }}
         run: |
            mkdir -p output-xcp-ng
            cp /home/github/github-actions/hypervisors/xcp-ng.qcow2 output-xcp-ng/xcp-ng
            
       - name: Start XCP-NG VM
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/xen" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 8192 -smp 8,sockets=2,cores=4  \
           -object iothread,id=io1 \
@@ -84,7 +84,7 @@ jobs:
           -display none &
           
       - name: Get XCP-NG Ports
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/xen" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           ports=$(echo 'info usernet' | socat - UNIX-CONNECT:./mon.sock | grep HOST_FORWARD | tr -s ' ' | cut -d' ' -f 5,7)
           echo "== PORTS =="
@@ -96,7 +96,7 @@ jobs:
           done <<< "$ports"
           
       - name: Wait for xcp-ng to boot
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/xen" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           until sshpass -p 'Muster!' ssh \
             -o UserKnownHostsFile=./known_hosts \
@@ -111,7 +111,7 @@ jobs:
           
         
       - name: Import VM
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/xen" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           sshpass -p 'Muster!' scp -P ${{ env.port_mapping_22 }} \
              -o "StrictHostKeyChecking no" \
@@ -126,7 +126,7 @@ jobs:
             "xe vm-import filename=/opt/lmn7-opnsense.xva"
          
       - name: Start VM
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/xen" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           sshpass -p 'Muster!' ssh \
             -o UserKnownHostsFile=./known_hosts \
@@ -136,7 +136,7 @@ jobs:
             "xe vm-start vm=lmn7-opnsense"
         
       - name: Connect to opnsense on xen
-        if: ${{ github.ref == "refs/heads/main" || github.ref == "refs/heads/xen" || startsWith(github.ref, "refs/tags/") }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           until sshpass -p 'Muster!' ssh \
             -o UserKnownHostsFile=./known_hosts \
