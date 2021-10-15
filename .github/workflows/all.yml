@@ -8,7 +8,7 @@ env:
 
 jobs:
   create-xcp-ng:
-    uses: flx5/lmn-packer/.github/workflows/infrastructure-xen@${{ github.sha }}
+    uses: ./.github/workflows/infrastructure-xen
     with:
       disk: ${{ env.XCP_DISK }}
 
