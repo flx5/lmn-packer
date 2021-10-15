@@ -12,6 +12,7 @@ jobs:
       disk: /home/github/github-actions/hypervisors/xcp-ng.qcow2
 
   qemu:
+    needs: create-xcp-ng
     runs-on: [self-hosted, qemu]
     env: 
       PACKER_LOG: 1
