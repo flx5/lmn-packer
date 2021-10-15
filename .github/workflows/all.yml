@@ -2,13 +2,15 @@ name: Build all
 
 on:
   push:
+    branches:
+      - main
 
 env:
   XCP_DISK: /home/github/github-actions/hypervisors/xcp-ng.qcow2
 
 jobs:
   create-xcp-ng:
-    uses: ./.github/workflows/infrastructure-xen@main
+    uses: flx5/lmn-packer/.github/workflows/infrastructure-xen@main
     with:
       disk: ${{ env.XCP_DISK }}
 
