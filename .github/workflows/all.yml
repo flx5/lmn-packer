@@ -29,23 +29,23 @@ jobs:
         run: |
            ./take_screenshots.sh logs/opnsense-base.log opnsense-base 60 &
            PID=$!
-           packer build -only qemu.opnsense -var headless=true 18
+           packer build -only qemu.opnsense -var headless=true vms/opnsense/
            kill $PID
 
       - name: List opnsense-base artifacts
-        run: ls -lh output-opnsense
+        run: ls -lh output/opnsense
         
       - name: Convert to virtualbox
         env:
            PACKER_LOG_PATH: logs/opnsense-virtualbox.log
-        run: packer build -only qemu.opnsense-virtualbox -var headless=true 18
+        run: packer build -only qemu.opnsense-virtualbox -var headless=true vms/opnsense/virtualbox/
         
         # TODO Test on virtualbox with virtualbox-ovf.opnsense-virtualbox-test
         
       - name: Convert to Xen
         env:
            PACKER_LOG_PATH: logs/opnsense-xen.log
-        run: packer build -only qemu.opnsense-xen -var headless=true 18
+        run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/xen/
         
         # TODO Test import on xen
         
@@ -101,7 +101,7 @@ jobs:
           sshpass -p 'Muster!' scp -P ${{ env.port_mapping_22 }} \
              -o "StrictHostKeyChecking no" \
              -o UserKnownHostsFile=./known_hosts \
-             output-opnsense-xen/lmn7-opnsense.xva root@localhost:/opt/lmn7-opnsense.xva
+             output/opnsense-xen/lmn7-opnsense.xva root@localhost:/opt/lmn7-opnsense.xva
              
           sshpass -p 'Muster!' ssh \
             -o UserKnownHostsFile=./known_hosts \
