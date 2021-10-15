@@ -85,6 +85,7 @@ jobs:
       - name: Wait for xcp-ng to boot
         run: |
           until sshpass -p 'Muster!' ssh \
+            -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
             -p ${{ env.port_mapping_22 }} \
             root@localhost \
@@ -94,8 +95,13 @@ jobs:
         
       - name: Import VM
         run: |
-          sshpass -p 'Muster!' scp -P ${{ env.port_mapping_22 }} -o "StrictHostKeyChecking no" output-opnsense-xen/lmn7-opnsense.xva root@localhost:/opt/lmn7-opnsense.xva
+          sshpass -p 'Muster!' scp -P ${{ env.port_mapping_22 }} \
+             -o "StrictHostKeyChecking no" \
+             -o UserKnownHostsFile=./known_hosts \
+             output-opnsense-xen/lmn7-opnsense.xva root@localhost:/opt/lmn7-opnsense.xva
+             
           sshpass -p 'Muster!' ssh \
+            -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
             -p ${{ env.port_mapping_22 }} \
             root@localhost \
@@ -104,6 +110,7 @@ jobs:
       - name: Start VM
         run: |
           sshpass -p 'Muster!' ssh \
+            -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
             -p ${{ env.port_mapping_22 }} \
             root@localhost \
@@ -112,6 +119,7 @@ jobs:
       - name: Connect to opnsense on xen
         run: |
           until sshpass -p 'Muster!' ssh \
+            -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
             -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
             root@10.0.0.254 \
@@ -120,6 +128,7 @@ jobs:
             
           echo "Test wan connectivity"
           sshpass -p 'Muster!' ssh \
+            -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
             -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
             root@10.0.0.254 \
