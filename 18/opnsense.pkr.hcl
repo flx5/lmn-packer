@@ -140,7 +140,7 @@ build {
   
    post-processor "checksum" {
     checksum_types = ["sha256"]
-    output = "packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+    output = "output-opnsense/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
   }
 }
 
@@ -152,8 +152,7 @@ source "qemu" "opnsense-virtualbox" {
   use_backing_file = true
   iso_url = "output-opnsense/packer-opnsense"
   
-  # TODO Can the previous step generate checksum?
-  iso_checksum = "none"
+  iso_checksum = "file:output-opnsense/packer_opnsense_sha256.checksum"
 
   headless             = "${var.headless}"
 
@@ -256,8 +255,7 @@ source "qemu" "opnsense-qemu" {
   use_backing_file = true
   iso_url = "output-opnsense/packer-opnsense"
   
-  # TODO Can the previous step generate checksum?
-  iso_checksum = "none"
+  iso_checksum = "file:output-opnsense/packer_opnsense_sha256.checksum"
 
   headless             = "${var.headless}"
 
@@ -329,8 +327,7 @@ source "qemu" "opnsense-xen" {
   use_backing_file = true
   iso_url = "output-opnsense/packer-opnsense"
   
-  # TODO Can the previous step generate checksum?
-  iso_checksum = "none"
+  iso_checksum = "file:output-opnsense/packer_opnsense_sha256.checksum"
 
   headless             = "${var.headless}"
 
