@@ -108,9 +108,6 @@ jobs:
             -p ${{ env.port_mapping_22 }} \
             root@localhost \
             "xe vm-start vm=lmn7-opnsense"
-
-      - name: Wait for xcp-ng opnsense to boot
-        run: sleep 120
         
       - name: Connect to opnsense on xen
         run: |
