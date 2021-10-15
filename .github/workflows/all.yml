@@ -3,7 +3,15 @@ name: Build all
 on:
   push:
 
+env:
+  XCP_DISK: /home/github/github-actions/hypervisors/xcp-ng.qcow2
+
 jobs:
+  create-xcp-ng:
+    uses: flx5/lmn-packer/.github/workflows/infrastructure-xen@${{ github.sha }}
+    with:
+      disk: ${{ env.XCP_DISK }}
+
   qemu:
     runs-on: [self-hosted, qemu]
     env: 
@@ -46,17 +54,11 @@ jobs:
         env:
            PACKER_LOG_PATH: logs/opnsense-xen.log
         run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/
-        
-        # TODO Test import on xen
-        
-      - name: Build XCP-NG VM
-        env:
-           PACKER_LOG_PATH: logs/xcp-ng.log
+              
+      - name: Copy XCP-NG VM
         run: |
-           ./take_screenshots.sh logs/xcp-ng.log xen 60 &
-           PID=$!
-           packer build -only qemu.xcp-ng -var headless=true build_infrastructure
-           kill $PID
+           mkdir -p output-xcp-ng
+           cp ${{ env.XCP_DISK }} output-xcp-ng/xcp-ng
            
       - name: Start XCP-NG VM
         run: |

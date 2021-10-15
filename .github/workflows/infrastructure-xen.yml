@@ -1,0 +1,38 @@
+name: Build xen hypervisor vm
+
+on: 
+  workflow_call:
+    inputs:
+      disk:
+        required: true
+        type: string
+  
+jobs:
+  qemu:
+    runs-on: [self-hosted, qemu]
+    env: 
+      PACKER_LOG: 1
+      PACKER_CACHE_DIR: /home/github/github-actions/packer_cache/
+      PKR_VAR_qemu_bridge: vmbr1
+      
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Create directories
+        run: mkdir -p logs screenshots
+        
+      - name: Build XCP-NG VM
+        env:
+           PACKER_LOG_PATH: logs/xcp-ng.log
+        run: |
+           ./take_screenshots.sh logs/xcp-ng.log xen 60 &
+           PID=$!
+           packer build -only qemu.xcp-ng -var headless=true build_infrastructure
+           kill $PID
+           
+      - name: Store disk
+        env:
+           PACKER_LOG_PATH: logs/xcp-ng.log
+        run: cp output/xcp-ng/xcp-ng ${{ inputs.disk }}
+           
