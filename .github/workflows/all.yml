@@ -60,16 +60,20 @@ jobs:
      ############################################################################################   
 
       - name: Convert to Xen
-        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/virtualbox' || startsWith(github.ref, 'refs/tags/') }}
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         env:
            PACKER_LOG_PATH: logs/opnsense-xen.log
         run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/
-              
-      - name: Copy XCP-NG VM
-        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/virtualbox' || startsWith(github.ref, 'refs/tags/') }}
+           
+      - name: Build XCP-NG VM
+        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
+        env:
+           PACKER_LOG_PATH: logs/xcp-ng.log
         run: |
-           mkdir -p output-xcp-ng
-           cp /home/github/github-actions/hypervisors/xcp-ng.qcow2 output-xcp-ng/xcp-ng
+           ./take_screenshots.sh logs/xcp-ng.log xen 60 &
+           PID=$!
+           packer build -only qemu.xcp-ng -var headless=true build_infrastructure
+           kill $PID
            
       - name: Start XCP-NG VM
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
@@ -85,6 +89,8 @@ jobs:
           -monitor unix:$PWD/mon.sock,server,nowait \
           -display none &
           
+      # TODO Check that qemu started successfully
+          
       - name: Get XCP-NG Ports
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
@@ -96,6 +102,8 @@ jobs:
               echo "Host: ${split[0]} Guest: ${split[1]}"
               echo "port_mapping_${split[1]}=${split[0]}" >> $GITHUB_ENV
           done <<< "$ports"
+          
+      # TODO Check that these ports can be found
           
       - name: Wait for xcp-ng to boot
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
