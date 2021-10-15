@@ -54,7 +54,7 @@ d-i pkgsel/install-language-support boolean false
 
 ### Boot loader installation
 d-i grub-installer/only_debian boolean true
-d-i grub-installer/bootdev string /dev/sda
+d-i grub-installer/bootdev string /dev/${grub_disk}
 
 ### Finishing up the installation
 d-i finish-install/reboot_in_progress note

@@ -5,7 +5,7 @@ variable "headless" {
 
 variable "vbox_internal_net" {
   type    = string
-  default = null
+  default = "PLEASE_SPECIFY"
 }
 
 variable "vbox_keep_registered" {
