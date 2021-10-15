@@ -62,6 +62,15 @@ qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp $(nproc)  \
 To find ports use
 echo 'info usernet' | socat - UNIX-CONNECT:./mon.sock | grep HOST_FORWARD | tr -s ' ' | cut -d' ' -f 5,7
 
+Alternativly run on bridge with dhcp server available:
+
+qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 4096 -smp $(nproc)  \
+-drive file=output-xcp-ng/disk.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+-netdev bridge,id=user.0,br=virbr0 \
+-device virtio-net,netdev=user.0 \
+-netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
+-device virtio-net,netdev=user.1
+
 */
 build {
   sources = [ "sources.qemu.xcp-ng" ]
