@@ -1,34 +1,21 @@
 locals {
-   output_dir = "output/opnsense-xen/"
-   input_dir = "output/opnsense/"
-
-   raw_disk = "${local.output_dir}/packer-opnsense-xen.raw"
-   ova_template = "${path.root}/ova.xml"
+   xen = {
+     output_dir = "output/opnsense-xen/"
+     raw_disk = "output/opnsense-xen/packer-opnsense-xen.raw"
+     ova_template = "${path.root}/xen/ova.xml"
+   }
 }
 
-variable "ssh_password" {
-  type    = string
-  default = "Muster!"
-}
 
-variable "red_network" {
-  type    = string
-  default = "192.168.122.0/24"
-}
-
-variable "qemu_bridge" {
-  type    = string
-  default = "virbr5"
-}
 
 source "qemu" "opnsense-xen" {
   disk_image       = true
   use_backing_file = true
   
-  iso_url          = "${input_dir}/packer-opnsense"
-  iso_checksum = "file:${input_dir}/packer_opnsense_sha256.checksum"
+  iso_url          = "${local.opnsense.output_dir}/packer-opnsense"
+  iso_checksum = "file:${local.opnsense.output_dir}/packer_opnsense_sha256.checksum"
   
-  output_directory = local.output_dir
+  output_directory = local.xen.output_dir
 
   headless = var.headless
 
@@ -79,29 +66,29 @@ build {
     post-processor "shell-local" {
       inline = [
         # Convert qcow2 to raw
-        "qemu-img convert -f qcow2 -O raw ${local.output_dir}/packer-opnsense-xen ${local.raw_disk}",
+        "qemu-img convert -f qcow2 -O raw ${local.xen.output_dir}/packer-opnsense-xen ${local.xen.raw_disk}",
         
         # Convert raw to xva disk slices
-        "mkdir '${local.output_dir}/Ref:37/'",
-        "./tools/xva-img/xva-img -p disk-import '${local.output_dir}/Ref:37/' ${local.raw_disk}",
+        "mkdir '${local.xen.output_dir}/Ref:37/'",
+        "./tools/xva-img/xva-img -p disk-import '${local.xen.output_dir}/Ref:37/' ${local.xen.raw_disk}",
         
         # Convert the template
-        "python3 tools/scripts/convert.py -d ${local.raw_disk} -t ${local.ova_template} -o ${local.output_dir}/ova.xml",
+        "python3 tools/scripts/convert.py -d ${local.xen.raw_disk} -t ${local.xen.ova_template} -o ${local.xen.output_dir}/ova.xml",
         
         # Create xva
-        "./tools/xva-img/xva-img -p package ${local.output_dir}/lmn7-opnsense.xva ${local.output_dir}/ova.xml '${local.output_dir}/Ref:37/'"
+        "./tools/xva-img/xva-img -p package ${local.xen.output_dir}/lmn7-opnsense.xva ${local.xen.output_dir}/ova.xml '${local.xen.output_dir}/Ref:37/'"
       ]
     }
 
     post-processor "artifice" {
       files = [
-        "${local.output_dir}/lmn7-opnsense.xva"
+        "${local.xen.output_dir}/lmn7-opnsense.xva"
       ]
     }
 
     post-processor "checksum" {
       checksum_types = ["sha256"]
-      output         = "${local.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+      output         = "${local.xen.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
     }
   }
 }

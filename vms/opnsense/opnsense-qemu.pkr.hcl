@@ -1,33 +1,18 @@
 locals {
-   output_dir = "output/opnsense-qemu/"
-   input_dir = "output/opnsense/"
-}
-
-variable "ssh_password" {
-  type    = string
-  default = "Muster!"
+   qemu = {
+      output_dir = "output/qemu/"
+   }
 }
 
 
-variable "red_network" {
-  type    = string
-  default = "192.168.122.0/24"
-}
-
-variable "qemu_bridge" {
-  type    = string
-  default = "virbr5"
-}
-
-
-source "qemu" "opnsense-qemu" {
+source "qemu" "qemu" {
   disk_image       = true
   use_backing_file = true
   
-  iso_url          = "${input_dir}/packer-opnsense"
-  iso_checksum = "file:${input_dir}/packer_opnsense_sha256.checksum"
+  iso_url          = "${local.opnsense.output_dir}/packer-opnsense"
+  iso_checksum = "file:${local.opnsense.output_dir}/packer_opnsense_sha256.checksum"
   
-  output_directory = local.output_dir
+  output_directory = local.qemu.output_dir
 
   headless = "${var.headless}"
 
@@ -53,7 +38,7 @@ source "qemu" "opnsense-qemu" {
 
 
 build {
-  sources = ["qemu.opnsense-qemu"]
+  sources = ["qemu.qemu"]
 
   provisioner "shell" {
     # FreeBSD uses tcsh
@@ -72,23 +57,23 @@ build {
 
   post-processors {
     post-processor "shell-local" {
-      inline = ["qemu-img convert -f qcow2 -O qcow2 ${local.output_dir}/packer-opnsense-qemu ${local.output_dir}/packer-opnsense-qemu.qcow2"]
+      inline = ["qemu-img convert -f qcow2 -O qcow2 ${local.qemu.output_dir}/packer-qemu ${local.qemu.output_dir}/packer-qemu.qcow2"]
     }
 
     post-processor "artifice" {
       files = [
-        "${local.output_dir}/packer-opnsense-qemu.qcow2"
+        "${local.qemu.output_dir}/packer-qemu.qcow2"
       ]
     }
 
     post-processor "checksum" {
       checksum_types = ["sha256"]
-      output         = "${local.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+      output         = "${local.qemu.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
     }
   }
 
 
   /*
-   qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output/opnsense-qemu/packer-opnsense-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24  -device virtio-net,netdev=user.0 -netdev bridge,id=user.1,br=virbr5 -device virtio-net,netdev=user.1
+   qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output/qemu/packer-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24  -device virtio-net,netdev=user.0 -netdev bridge,id=user.1,br=virbr5 -device virtio-net,netdev=user.1
   */
 }

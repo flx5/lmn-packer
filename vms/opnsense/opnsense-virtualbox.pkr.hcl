@@ -1,34 +1,20 @@
 locals {
-   output_dir = "output/opnsense-virtualbox/"
-   input_dir = "output/opnsense/"
+   virtualbox = {
+     output_dir = "output/opnsense-virtualbox/"
    
-   output_vmdk = "${local.output_dir}/packer-opnsense-virtualbox.vmdk"
-   ovf_template = "${path.root}/packer-opnsense-virtualbox.ovf"
-}
-
-variable "ssh_password" {
-  type    = string
-  default = "Muster!"
-}
-
-variable "red_network" {
-  type    = string
-  default = "192.168.122.0/24"
-}
-
-variable "qemu_bridge" {
-  type    = string
-  default = "virbr5"
+     output_vmdk = "output/opnsense-virtualbox/packer-opnsense-virtualbox.vmdk"
+     ovf_template = "${path.root}/virtualbox/packer-opnsense-virtualbox.ovf"
+   }
 }
 
 source "qemu" "opnsense-virtualbox" {
   disk_image = true
   use_backing_file = true
   
-  iso_url          = "${input_dir}/packer-opnsense"
-  iso_checksum = "file:${input_dir}/packer_opnsense_sha256.checksum"
+  iso_url          = "${local.opnsense.output_dir}/packer-opnsense"
+  iso_checksum = "file:${local.opnsense.output_dir}/packer_opnsense_sha256.checksum"
 
-  output_directory = local.output_dir
+  output_directory = local.virtualbox.output_dir
 
   headless = "${var.headless}"
 
@@ -68,24 +54,24 @@ build {
   }
   post-processors {
     post-processor "shell-local" {
-      inline = ["qemu-img convert -f qcow2 -O vmdk ${local.output_dir}/packer-opnsense-virtualbox ${local.output_vmdk}"]
+      inline = ["qemu-img convert -f qcow2 -O vmdk ${local.virtualbox.output_dir}/packer-opnsense-virtualbox ${local.virtualbox.output_vmdk}"]
     }
 
     post-processor "artifice" {
       files = [
-        local.output_vmdk
+        local.virtualbox.output_vmdk
       ]
     }
 
     post-processor "shell-local" {
       inline = [
-        "python3 tools/scripts/convert.py -d ${local.output_vmdk} -t ${local.ovf_template} -o ${local.output_dir}/packer-opnsense-virtualbox.ovf"
+        "python3 tools/scripts/convert.py -d ${local.virtualbox.output_vmdk} -t ${local.virtualbox.ovf_template} -o ${local.virtualbox.output_dir}/packer-opnsense-virtualbox.ovf"
       ]
     }
 
     post-processor "checksum" {
       checksum_types = ["sha256"]
-      output         = "${local.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+      output         = "${local.virtualbox.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
     }
   }
 

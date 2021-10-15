@@ -38,14 +38,14 @@ jobs:
       - name: Convert to virtualbox
         env:
            PACKER_LOG_PATH: logs/opnsense-virtualbox.log
-        run: packer build -only qemu.opnsense-virtualbox -var headless=true vms/opnsense/virtualbox/
+        run: packer build -only qemu.opnsense-virtualbox -var headless=true vms/opnsense/
         
         # TODO Test on virtualbox with virtualbox-ovf.opnsense-virtualbox-test
         
       - name: Convert to Xen
         env:
            PACKER_LOG_PATH: logs/opnsense-xen.log
-        run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/xen/
+        run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/
         
         # TODO Test import on xen
         

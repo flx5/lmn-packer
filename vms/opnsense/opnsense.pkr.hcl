@@ -7,6 +7,8 @@ locals {
     iso_checksum      = "sha256:289522e2f4e1260859505adab6d7b54ab83d19aeb147388ff7e28019984da5dc"
 
     opnsense_release = "21.7"
+    
+    output_dir = "output/opnsense/"
   }
 }
 
@@ -51,7 +53,7 @@ source "qemu" "opnsense" {
 
   shutdown_command = "shutdown -p now"
   
-  output_directory = "output/opnsense/"
+  output_directory = local.opnsense.output_dir
 
   qemuargs = [
     # Wan
@@ -78,12 +80,12 @@ source "qemu" "opnsense" {
 
   http_content = {
     "/config.xml" = templatefile("http/config.xml", {
-      root_pw_hash = bcrypt(var.root_password),
+      root_pw_hash = bcrypt(var.ssh_password),
       wan_iface    = "vtnet0",
       lan_iface    = "vtnet1"
     }),
     "/installerconfig" = templatefile("http/installerconfig.pkrtpl.hcl", {
-      root_pw    = var.root_password,
+      root_pw    = var.ssh_password,
       wan_iface  = "vtnet0",
       lan_iface  = "vtnet1",
       partitions = "vtbd0"
