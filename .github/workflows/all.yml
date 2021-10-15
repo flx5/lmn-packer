@@ -70,10 +70,7 @@ jobs:
           -device virtio-net,netdev=user.1 \
           -monitor unix:$PWD/mon.sock,server,nowait \
           -display none &
-
-      - name: Wait for xcp-ng to boot
-        run: sleep 300
-        
+          
       - name: Get XCP-NG Ports
         run: |
           ports=$(echo 'info usernet' | socat - UNIX-CONNECT:./mon.sock | grep HOST_FORWARD | tr -s ' ' | cut -d' ' -f 5,7)
@@ -84,6 +81,16 @@ jobs:
               echo "Host: ${split[0]} Guest: ${split[1]}"
               echo "port_mapping_${split[1]}=${split[0]}" >> $GITHUB_ENV
           done <<< "$ports"
+          
+      - name: Wait for xcp-ng to boot
+        run: |
+          until sshpass -p 'Muster!' ssh \
+            -o "StrictHostKeyChecking no" \
+            -p ${{ env.port_mapping_22 }} \
+            root@localhost \
+            "until xe vm-list; do sleep 10; done"
+          do sleep 10; done
+          
         
       - name: Import VM
         run: |
@@ -107,18 +114,19 @@ jobs:
         
       - name: Connect to opnsense on xen
         run: |
-          sshpass -p 'Muster!' ssh \
+          until sshpass -p 'Muster!' ssh \
             -o "StrictHostKeyChecking no" \
             -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
             root@10.0.0.254 \
             "hostname"
+          do sleep 5; done
             
           echo "Test wan connectivity"
           sshpass -p 'Muster!' ssh \
             -o "StrictHostKeyChecking no" \
             -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
             root@10.0.0.254 \
-            "ping -c 5 1.1.1.1"
+            "curl http://example.org"
 
       - name: List output
         run: |
