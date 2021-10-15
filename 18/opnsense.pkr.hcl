@@ -361,8 +361,15 @@ build {
 
     inline = [
       "sed -i '' 's/vtbd0/ada0/' /etc/fstab",
+      
+      # Red is on xn0
       "sed -i '' 's/vtnet0/xn0/' /conf/config.xml",
-      "sed -i '' 's/vtnet1/xn1/' /conf/config.xml",
+      
+      # TODO Blue is on xn1
+      
+      
+      # Green is on xn2
+      "sed -i '' 's/vtnet1/xn2/' /conf/config.xml",
       "pkg install -y os-xen"
     ]
   }
