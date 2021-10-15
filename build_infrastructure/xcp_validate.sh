@@ -2,8 +2,8 @@
 
 set -e
 
-RED_NETWORK=$(xe network-list name-label=Red --minimal)
-GREEN_NETWORK=$(xe network-list name-label=Green --minimal)
+RED_NETWORK=$(xe network-list name-label='RED Internet' --minimal)
+GREEN_NETWORK=$(xe network-list name-label='Green - LAN' --minimal)
 
 if [[ -z "$RED_NETWORK" || -z "$GREEN_NETWORK" ]]; then
   echo "Network misconfigured"
