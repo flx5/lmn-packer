@@ -13,6 +13,8 @@ source "qemu" "xcp-ng" {
   vm_name = "xcp-ng"
   net_device = "virtio-net"
   disk_interface = "virtio"
+  
+  output_directory = "output/xcp-ng"
 
   boot_wait = "3s"
 
