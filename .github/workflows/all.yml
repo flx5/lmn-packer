@@ -8,7 +8,7 @@ env:
 
 jobs:
   create-xcp-ng:
-    uses: ./.github/workflows/infrastructure-xen
+    uses: ./.github/workflows/infrastructure-xen@main
     with:
       disk: ${{ env.XCP_DISK }}
 
