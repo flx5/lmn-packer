@@ -5,14 +5,11 @@ on:
     branches:
       - main
 
-env:
-  XCP_DISK: /home/github/github-actions/hypervisors/xcp-ng.qcow2
-
 jobs:
   create-xcp-ng:
     uses: flx5/lmn-packer/.github/workflows/infrastructure-xen.yml@main
     with:
-      disk: ${{ env.XCP_DISK }}
+      disk: /home/github/github-actions/hypervisors/xcp-ng.qcow2
 
   qemu:
     runs-on: [self-hosted, qemu]
@@ -60,7 +57,7 @@ jobs:
       - name: Copy XCP-NG VM
         run: |
            mkdir -p output-xcp-ng
-           cp ${{ env.XCP_DISK }} output-xcp-ng/xcp-ng
+           cp /home/github/github-actions/hypervisors/xcp-ng.qcow2 output-xcp-ng/xcp-ng
            
       - name: Start XCP-NG VM
         run: |
