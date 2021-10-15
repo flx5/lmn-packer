@@ -727,14 +727,6 @@
                         <value>
                           <struct>
                             <member>
-                              <name>0/ip</name>
-                              <value>192.168.1.169</value>
-                            </member>
-                            <member>
-                              <name>0/ipv4/0</name>
-                              <value>192.168.1.169</value>
-                            </member>
-                            <member>
                               <name>2/ip</name>
                               <value>10.0.0.254</value>
                             </member>
