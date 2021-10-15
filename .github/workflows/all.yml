@@ -92,6 +92,9 @@ jobs:
             "until xe vm-list; do sleep 10; done"
           do sleep 10; done
           
+          # wait some more to make sure it is fully up
+          sleep 30
+          
         
       - name: Import VM
         run: |
