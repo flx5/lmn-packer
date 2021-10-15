@@ -10,7 +10,7 @@ env:
 
 jobs:
   create-xcp-ng:
-    uses: flx5/lmn-packer/.github/workflows/infrastructure-xen@main
+    uses: flx5/lmn-packer/.github/workflows/infrastructure-xen.yml@main
     with:
       disk: ${{ env.XCP_DISK }}
 
