@@ -8,7 +8,7 @@ locals {
 
     opnsense_release = "21.7"
     
-    output_dir = "output/opnsense/"
+    output_dir = "output/opnsense"
   }
 }
 

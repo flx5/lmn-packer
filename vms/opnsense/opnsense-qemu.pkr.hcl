@@ -1,6 +1,6 @@
 locals {
    qemu = {
-      output_dir = "output/qemu/"
+      output_dir = "output/qemu"
    }
 }
 

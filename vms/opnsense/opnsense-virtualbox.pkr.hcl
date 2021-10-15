@@ -1,6 +1,6 @@
 locals {
    virtualbox = {
-     output_dir = "output/opnsense-virtualbox/"
+     output_dir = "output/opnsense-virtualbox"
    
      output_vmdk = "output/opnsense-virtualbox/packer-opnsense-virtualbox.vmdk"
      ovf_template = "${path.root}/virtualbox/packer-opnsense-virtualbox.ovf"

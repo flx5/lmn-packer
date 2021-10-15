@@ -1,6 +1,6 @@
 locals {
    xen = {
-     output_dir = "output/opnsense-xen/"
+     output_dir = "output/opnsense-xen"
      raw_disk = "output/opnsense-xen/packer-opnsense-xen.raw"
      ova_template = "${path.root}/xen/ova.xml"
    }
