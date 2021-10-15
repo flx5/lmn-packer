@@ -1,3 +1,4 @@
 [submodule "tools/xva-img"]
 	path = tools/xva-img
 	url = https://github.com/eriklax/xva-img.git
+	ignore = dirty
