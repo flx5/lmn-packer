@@ -93,7 +93,33 @@ jobs:
             -p ${{ env.port_mapping_22 }} \
             root@localhost \
             "xe vm-import filename=/opt/lmn7-opnsense.xva"
-          
+         
+      - name: Start VM
+        run: |
+          sshpass -p 'Muster!' ssh \
+            -o "StrictHostKeyChecking no" \
+            -p ${{ env.port_mapping_22 }} \
+            root@localhost \
+            "xe vm-start vm=lmn7-opnsense"
+
+      - name: Wait for xcp-ng opnsense to boot
+        run: sleep 120
+        
+      - name: Connect to opnsense on xen
+        run: |
+          sshpass -p 'Muster!' ssh \
+            -o "StrictHostKeyChecking no" \
+            -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
+            root@10.0.0.254 \
+            "hostname"
+            
+          echo "Test wan connectivity"
+          sshpass -p 'Muster!' ssh \
+            -o "StrictHostKeyChecking no" \
+            -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
+            root@10.0.0.254 \
+            "ping -c 5 1.1.1.1"
+
       - name: List output
         run: |
           ls -l output-*
