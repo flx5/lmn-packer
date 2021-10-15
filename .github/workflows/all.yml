@@ -124,7 +124,7 @@ jobs:
           until sshpass -p 'Muster!' ssh \
             -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
-            -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
+            -o ProxyCommand='sshpass -p "Muster!" ssh -o "StrictHostKeyChecking no" -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
             root@10.0.0.254 \
             "hostname"
           do sleep 5; done
@@ -133,7 +133,7 @@ jobs:
           sshpass -p 'Muster!' ssh \
             -o UserKnownHostsFile=./known_hosts \
             -o "StrictHostKeyChecking no" \
-            -o ProxyCommand='sshpass -p "Muster!" ssh -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
+            -o ProxyCommand='sshpass -p "Muster!" ssh -o "StrictHostKeyChecking no" -p ${{ env.port_mapping_22 }} -W %h:%p root@localhost' \
             root@10.0.0.254 \
             "curl http://example.org"
 
