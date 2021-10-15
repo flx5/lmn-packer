@@ -1970,11 +1970,11 @@
                       </member>
                       <member>
                         <name>virtual_size</name>
-                        <value>21474836480</value>
+                        <value>${virtual_size_0}</value>
                       </member>
                       <member>
                         <name>physical_utilisation</name>
-                        <value>6139888128</value>
+                        <value>${physical_size_0}</value>
                       </member>
                       <member>
                         <name>type</name>

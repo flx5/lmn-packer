@@ -5,6 +5,7 @@
   </References>
   <DiskSection>
     <Info>List of the virtual disks used in the package</Info>
+    <!-- Disk size in byte -->
     <Disk ovf:capacity="26843545600" ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" vbox:uuid="043fd837-603e-43da-a588-2cd298ae9932"/>
   </DiskSection>
   <NetworkSection>

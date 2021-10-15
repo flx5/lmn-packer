@@ -203,7 +203,9 @@ build {
    }
   
    post-processor "shell-local" {
-        inline = ["cp hypervisor/virtualbox/packer-opnsense-virtualbox.ovf output-opnsense-virtualbox"]
+        inline = [
+          "python3 tools/scripts/convert.py -d output-opnsense-virtualbox/packer-opnsense-virtualbox.vmdk -t  hypervisor/virtualbox/packer-opnsense-virtualbox.ovf -o output-opnsense-virtualbox/packer-opnsense-virtualbox.ovf"
+         ]
    }
   
    post-processor "checksum" {
@@ -374,8 +376,8 @@ build {
         "qemu-img convert -f qcow2 -O raw output-opnsense-xen/packer-opnsense-xen output-opnsense-xen/packer-opnsense-xen.raw",
         "mkdir 'output-opnsense-xen/Ref:37/'",
         "./tools/xva-img/xva-img -p disk-import 'output-opnsense-xen/Ref:37/' output-opnsense-xen/packer-opnsense-xen.raw",
-        #"cp hypervisor/xen/ova.xml output-opnsense-xen/ova.xml",
-        "./tools/xva-img/xva-img -p package output-opnsense-xen/lmn7-opnsense.xva hypervisor/xen/ova.xml 'output-opnsense-xen/Ref:37/'"
+        "python3 tools/scripts/convert.py -d output-opnsense-xen/packer-opnsense-xen.raw -t hypervisor/xen/ova.xml -o output-opnsense-xen/ova.xml",
+        "./tools/xva-img/xva-img -p package output-opnsense-xen/lmn7-opnsense.xva output-opnsense-xen/ova.xml 'output-opnsense-xen/Ref:37/'"
         ]
    }
    
