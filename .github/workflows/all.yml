@@ -68,7 +68,8 @@ jobs:
           -device virtio-net,netdev=user.0 \
           -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
           -device virtio-net,netdev=user.1 \
-          -monitor unix:$PWD/mon.sock,server,nowait &
+          -monitor unix:$PWD/mon.sock,server,nowait \
+          -display none &
 
       - name: Wait for xcp-ng to boot
         run: sleep 300
