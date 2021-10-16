@@ -29,12 +29,18 @@ source "qemu" "opnsense-virtualbox" {
 
   qemuargs = [
     # Wan
-    ["-netdev", "user,id=user.0,net=${var.red_network}"],
-    ["-device", "virtio-net,netdev=user.0"],
+    ["-netdev", "user,id=wan,net=${var.red_network}"],
+    ["-device", "virtio-net,netdev=wan"],
+
+    # OPT
+    ["-netdev", "user,id=opt,net=${var.blue_network}"],
+    ["-device", "virtio-net,netdev=opt"],
 
     # Lan
-    ["-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
-    ["-device", "virtio-net,netdev=user.1"]
+    # Lan must be on bridge because with user network the source address of packer ssh would not be within the correct subnet.
+    
+    ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
+    ["-device", "virtio-net,netdev=lan"]
   ]
 }
 
@@ -49,6 +55,7 @@ build {
       "sed -i '' 's/vtbd0/ada0/' /etc/fstab",
       "sed -i '' 's/vtnet0/em0/' /conf/config.xml",
       "sed -i '' 's/vtnet1/em1/' /conf/config.xml",
+      "sed -i '' 's/vtnet2/em2/' /conf/config.xml",
       "pkg install -y os-virtualbox"
     ]
   }
@@ -79,7 +86,7 @@ build {
 }
 
 source "virtualbox-ovf" "opnsense-virtualbox-test" {
-  source_path = "output-opnsense-virtualbox/packer-opnsense-virtualbox.ovf"
+  source_path = "${local.virtualbox.output_dir}/packer-opnsense-virtualbox.ovf"
 
   # For some weird reason packer keeps overwriting the ssh_host with 127.0.0.1.
   # The workaround connects to the target as a fake "bastion host" and then packer can use the loopback device...
@@ -99,8 +106,9 @@ source "virtualbox-ovf" "opnsense-virtualbox-test" {
   guest_additions_mode = "disable"
 
   vboxmanage = [
-    ["modifyvm", "{{.Name}}", "--natnet1", var.red_network]
-    # TODO Specify interface for lan
+    ["modifyvm", "{{.Name}}", "--natnet1", var.red_network],
+    ["modifyvm", "{{.Name}}", "--natnet2", var.blue_network],
+    ["modifyvm", "{{.Name}}", "--natnet3", "10.0.0.0/24"]
   ]
 
   format = "ova"

@@ -22,6 +22,11 @@ variable "red_network" {
   default = "192.168.122.0/24"
 }
 
+variable "blue_network" {
+  type    = string
+  default = "192.168.123.0/24"
+}
+
 variable "qemu_bridge" {
   type    = string
   default = "virbr5"
@@ -57,12 +62,18 @@ source "qemu" "opnsense" {
 
   qemuargs = [
     # Wan
-    ["-netdev", "user,id=user.0,net=${var.red_network}"],
-    ["-device", "virtio-net,netdev=user.0"],
+    ["-netdev", "user,id=wan,net=${var.red_network}"],
+    ["-device", "virtio-net,netdev=wan"],
+
+    # OPT
+    ["-netdev", "user,id=opt,net=${var.blue_network}"],
+    ["-device", "virtio-net,netdev=opt"],
 
     # Lan
-    ["-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
-    ["-device", "virtio-net,netdev=user.1"]
+    # Lan must be on bridge because with user network the source address of packer ssh would not be within the correct subnet.
+    
+    ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
+    ["-device", "virtio-net,netdev=lan"]
   ]
 
   boot_command = [
@@ -82,12 +93,13 @@ source "qemu" "opnsense" {
     "/config.xml" = templatefile("http/config.xml", {
       root_pw_hash = bcrypt(var.ssh_password),
       wan_iface    = "vtnet0",
-      lan_iface    = "vtnet1"
+      opt_iface    = "vtnet1",
+      lan_iface    = "vtnet2",
     }),
     "/installerconfig" = templatefile("http/installerconfig.pkrtpl.hcl", {
       root_pw    = var.ssh_password,
       wan_iface  = "vtnet0",
-      lan_iface  = "vtnet1",
+      lan_iface  = "vtnet2",
       partitions = "vtbd0"
     })
   }

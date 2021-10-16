@@ -6,7 +6,7 @@
   <DiskSection>
     <Info>List of the virtual disks used in the package</Info>
     <!-- Disk size in byte -->
-    <Disk ovf:capacity="26843545600" ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" vbox:uuid="043fd837-603e-43da-a588-2cd298ae9932"/>
+    <Disk ovf:capacity="${virtual_size_0}" ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" vbox:uuid="043fd837-603e-43da-a588-2cd298ae9932"/>
   </DiskSection>
   <NetworkSection>
     <Info>Logical networks used in the package</Info>
@@ -14,6 +14,9 @@
       <Description>Logical network used by this appliance.</Description>
     </Network>
     <Network ovf:name="NAT">
+      <Description>Logical network used by this appliance.</Description>
+    </Network>
+    <Network ovf:name="Null">
       <Description>Logical network used by this appliance.</Description>
     </Network>
   </NetworkSection>
@@ -88,10 +91,19 @@
       </Item>
       <Item>
         <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+        <rasd:Caption>Ethernet adapter on 'Null'</rasd:Caption>
+        <rasd:Connection>Null</rasd:Connection>
+        <rasd:ElementName>Ethernet adapter on 'Null'</rasd:ElementName>
+        <rasd:InstanceID>7</rasd:InstanceID>
+        <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
+        <rasd:ResourceType>10</rasd:ResourceType>
+      </Item>
+      <Item>
+        <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
         <rasd:Caption>Ethernet adapter on 'HostOnly'</rasd:Caption>
         <rasd:Connection>HostOnly</rasd:Connection>
         <rasd:ElementName>Ethernet adapter on 'HostOnly'</rasd:ElementName>
-        <rasd:InstanceID>7</rasd:InstanceID>
+        <rasd:InstanceID>8</rasd:InstanceID>
         <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
         <rasd:ResourceType>10</rasd:ResourceType>
       </Item>
@@ -108,16 +120,16 @@
           <HardwareVirtExLargePages enabled="false"/>
         </CPU>
         <Memory RAMSize="1024"/>
-        <Paravirt provider="KVM"/>
+        <Paravirt provider="Default"/>
         <Boot>
           <Order position="1" device="HardDisk"/>
           <Order position="2" device="DVD"/>
           <Order position="3" device="None"/>
           <Order position="4" device="None"/>
         </Boot>
-        <Display VRAMSize="4"/>
+        <Display controller="VMSVGA" VRAMSize="9"/>
         <VideoCapture screens="1" file="." fps="25"/>
-        <RemoteDisplay>
+        <RemoteDisplay enabled="false">
           <VRDEProperties>
             <Property name="TCP/Address" value="127.0.0.1"/>
             <Property name="TCP/Ports" value="5984"/>
@@ -128,10 +140,14 @@
           <SmbiosUuidLittleEndian enabled="true"/>
         </BIOS>
         <Network>
+          <!-- WAN -->
           <Adapter slot="0" enabled="true" MACAddress="080027E404C2" cable="true" type="82540EM">
             <NAT/>
           </Adapter>
-          <Adapter slot="1" enabled="true" cable="true" type="82540EM">
+          <!-- OPT -->
+          <Adapter slot="1" enabled="true" cable="false" type="82540EM" />
+          <!-- LAN -->
+          <Adapter slot="2" enabled="true" cable="true" type="82540EM">
             <DisabledModes>
               <InternalNetwork name="intnet"/>
               <NATNetwork name="NatNetwork"/>

@@ -30,12 +30,18 @@ source "qemu" "opnsense-xen" {
 
   qemuargs = [
     # Wan
-    ["-netdev", "user,id=user.0,net=${var.red_network}"],
-    ["-device", "virtio-net,netdev=user.0"],
+    ["-netdev", "user,id=wan,net=${var.red_network}"],
+    ["-device", "virtio-net,netdev=wan"],
+
+    # OPT
+    ["-netdev", "user,id=opt,net=${var.blue_network}"],
+    ["-device", "virtio-net,netdev=opt"],
 
     # Lan
-    ["-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
-    ["-device", "virtio-net,netdev=user.1"]
+    # Lan must be on bridge because with user network the source address of packer ssh would not be within the correct subnet.
+    
+    ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
+    ["-device", "virtio-net,netdev=lan"]
   ]
 }
 
@@ -50,14 +56,9 @@ build {
     inline = [
       "sed -i '' 's/vtbd0/ada0/' /etc/fstab",
 
-      # Red is on xn0
       "sed -i '' 's/vtnet0/xn0/' /conf/config.xml",
-
-      # TODO Blue is on xn1
-
-
-      # Green is on xn2
-      "sed -i '' 's/vtnet1/xn2/' /conf/config.xml",
+      "sed -i '' 's/vtnet1/xn1/' /conf/config.xml",
+      "sed -i '' 's/vtnet2/xn2/' /conf/config.xml",
       "pkg install -y os-xen"
     ]
   }

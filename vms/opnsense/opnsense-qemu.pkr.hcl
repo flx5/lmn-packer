@@ -5,7 +5,7 @@ locals {
 }
 
 
-source "qemu" "qemu" {
+source "qemu" "opnsense-qemu" {
   disk_image       = true
   use_backing_file = true
   
@@ -27,18 +27,25 @@ source "qemu" "qemu" {
 
   qemuargs = [
     # Wan
-    ["-netdev", "user,id=user.0,net=${var.red_network}"],
-    ["-device", "virtio-net,netdev=user.0"],
+    ["-netdev", "user,id=wan,net=${var.red_network}"],
+    ["-device", "virtio-net,netdev=wan"],
+
+    # OPT
+    ["-netdev", "user,id=opt,net=${var.blue_network}"],
+    ["-device", "virtio-net,netdev=opt"],
 
     # Lan
-    ["-netdev", "bridge,id=user.1,br=${var.qemu_bridge}"],
-    ["-device", "virtio-net,netdev=user.1"]
+    
+    # Lan must be on bridge because with user network the source address of packer ssh would not be within the correct subnet.
+    
+    ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
+    ["-device", "virtio-net,netdev=lan"]
   ]
 }
 
 
 build {
-  sources = ["qemu.qemu"]
+  sources = ["qemu.opnsense-qemu"]
 
   provisioner "shell" {
     # FreeBSD uses tcsh
@@ -49,20 +56,18 @@ build {
       "echo 'qemu_guest_agent_enable=\"YES\"' >> /etc/rc.conf",
       "echo 'qemu_guest_agent_flags=\"-d -v -l /var/log/qemu-ga.log\"' >> /etc/rc.conf",
       "kldload virtio_console",
-      "echo virtio_console_load=\"YES\" >> /boot/loader.conf",
-      "service qemu-guest-agent start",
-      "service qemu-guest-agent status"
+      "echo virtio_console_load=\"YES\" >> /boot/loader.conf"
     ]
   }
 
   post-processors {
     post-processor "shell-local" {
-      inline = ["qemu-img convert -f qcow2 -O qcow2 ${local.qemu.output_dir}/packer-qemu ${local.qemu.output_dir}/packer-qemu.qcow2"]
+      inline = ["qemu-img convert -f qcow2 -O qcow2 ${local.qemu.output_dir}/packer-opnsense-qemu ${local.qemu.output_dir}/packer-opnsense-qemu.qcow2"]
     }
 
     post-processor "artifice" {
       files = [
-        "${local.qemu.output_dir}/packer-qemu.qcow2"
+        "${local.qemu.output_dir}/packer-opnsense-qemu.qcow2"
       ]
     }
 
