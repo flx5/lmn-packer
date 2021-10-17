@@ -28,6 +28,11 @@ locals {
   }
 }
 
+variable "red_network" {
+  type    = string
+  default = "192.168.122.0/24"
+}
+
 variable "qemu_bridge" {
   type    = string
   default = "virbr5"
@@ -83,7 +88,7 @@ build {
         "netcfg/get_ipaddress=${source.value.ip} netcfg/get_netmask=255.255.255.0 ",
         "netcfg/get_gateway=10.0.0.254 netcfg/confirm_static=true ",
         "netcfg/get_domain=linuxmuster.lan ",
-        "preseed/url=http://{{ .HTTPIP }}:{{.HTTPPort}}/preseed.cfg -- <enter>"
+        "preseed/url=http://${cidrhost(var.red_network, 2)}:{{.HTTPPort}}/preseed.cfg -- <enter>"
       ]
     }
   }
