@@ -20,7 +20,7 @@ while true; do
        VNC_URL=${VNC_URL#*vnc://}
        # Replace : with :: for snapshot
        VNC_URL=${VNC_URL//:/::}
-       vncsnapshot "$VNC_URL" screenshots/${PREFIX}-screenshot-$(date +%Y%m%d-%H%M%S).jpg
+       vncsnapshot -quiet "$VNC_URL" screenshots/${PREFIX}-screenshot-$(date +%Y%m%d-%H%M%S).jpg
     fi
 
     sleep $INTERVAL
