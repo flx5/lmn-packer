@@ -60,6 +60,7 @@ source "qemu" "ubuntu" {
   shutdown_command = "shutdown -P now"
 
   net_bridge = var.qemu_bridge
+  skip_nat_mapping = true
 
   http_content = {
     "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.server.root_password, installs = [] })
@@ -73,6 +74,8 @@ build {
 
     content {
       name = source.key
+      
+      ssh_host = source.value.ip
 
       disk_size            = source.value.disk_size
       disk_additional_size = source.value.disk_additional_size
