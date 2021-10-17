@@ -59,12 +59,16 @@ source "qemu" "ubuntu" {
 
   shutdown_command = "shutdown -P now"
 
-  net_bridge = var.qemu_bridge
   skip_nat_mapping = true
 
   http_content = {
     "/preseed.cfg" = templatefile("preseed.pkrtpl.hcl", { root_pw = local.server.root_password, installs = [] })
   }
+  
+  qemuargs = [
+    ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
+    ["-device", "virtio-net,netdev=lan"]
+  ]
 }
 
 build {
