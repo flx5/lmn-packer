@@ -1,6 +1,6 @@
 locals {
    qemu = {
-      output_dir = "output/qemu"
+      output_dir = "output/opnsense-qemu"
    }
 }
 
@@ -79,6 +79,6 @@ build {
 
 
   /*
-   qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output/qemu/packer-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24  -device virtio-net,netdev=user.0 -netdev bridge,id=user.1,br=virbr5 -device virtio-net,netdev=user.1
+   qemu-system-x86_64 -snapshot -machine type=pc,accel=kvm -m 4096 -drive file=output/opnsense-qemu/packer-opnsense-qemu.qcow2,if=virtio,cache=writeback,discard=ignore,format=qcow2 -netdev user,id=user.0,net=192.168.122.0/24  -device virtio-net,netdev=user.0 -netdev user,id=opt,net=192.168.123.0/24 -device virtio-net,netdev=opt  -netdev bridge,id=user.1,br=virbr5 -device virtio-net,netdev=user.1
   */
 }

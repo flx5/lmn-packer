@@ -13,15 +13,13 @@ args = parser.parse_args()
 mapping = dict()
 
 for i, disk in enumerate(args.disks):
-   process_result = subprocess.run(["qemu-img", "info", disk, "--output", "json"], check=True, capture_output=True)
-   result = json.loads(process_result.stdout)
-   mapping['virtual_size_' + str(i)] = result['virtual-size']
-   mapping['physical_size_' + str(i)] = result['actual-size']
-
+    process_result = subprocess.run(["qemu-img", "info", disk, "--output", "json"], check=True, capture_output=True)
+    result = json.loads(process_result.stdout)
+    mapping['virtual_size_' + str(i)] = result['virtual-size']
+    mapping['physical_size_' + str(i)] = result['actual-size']
 
 with open(args.template, 'r') as f:
-   template = Template(f.read())
-
+    template = Template(f.read())
 
 with open(args.output, 'w') as f:
-   f.write(template.substitute(mapping))
+    f.write(template.substitute(mapping))

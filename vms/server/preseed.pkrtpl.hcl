@@ -46,7 +46,7 @@ d-i clock-setup/utc boolean true
 d-i time/zone string Europe/Berlin
 
 ### Partitioning
-d-i partman-auto/disk string /dev/sda
+d-i partman-auto/disk string /dev/vda
 d-i partman-auto/method string regular
 
 d-i partman-auto/choose_recipe select atomic
@@ -76,7 +76,7 @@ d-i pkgsel/install-language-support boolean false
 
 ### Boot loader installation
 d-i grub-installer/only_debian boolean true
-d-i grub-installer/bootdev string /dev/sda
+d-i grub-installer/bootdev string /dev/vda
 
 ### Finishing up the installation
 d-i finish-install/reboot_in_progress note

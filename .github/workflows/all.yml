@@ -14,6 +14,7 @@ jobs:
       PACKER_LOG: 1
       PACKER_CACHE_DIR: /home/github/github-actions/packer_cache/
       PKR_VAR_qemu_bridge: vmbr1
+      PKR_VAR_headless: true
     steps:
       - uses: actions/checkout@v2
         with:
@@ -33,11 +34,42 @@ jobs:
         run: |
            ./take_screenshots.sh logs/opnsense-base.log opnsense-base 60 &
            PID=$!
-           packer build -only qemu.opnsense -var headless=true vms/opnsense/
+           packer build -only qemu.opnsense vms/opnsense/
            kill $PID
 
       - name: List opnsense-base artifacts
         run: ls -lh output/opnsense
+        
+      - name: Start OPNSense
+        run: |
+         qemu-system-x86_64 \
+           -snapshot \
+           -machine type=pc,accel=kvm \
+           -m 4096 \
+           -drive file=output/opnsense/packer-opnsense,if=virtio,cache=writeback,discard=ignore,format=qcow2 \
+           -netdev user,id=user.0,net=192.168.122.0/24 \
+           -device virtio-net,netdev=user.0 \
+           -netdev user,id=opt,net=192.168.123.0/24 \
+           -device virtio-net,netdev=opt  \
+           -netdev bridge,id=user.1,br=$PKR_VAR_qemu_bridge \
+           -device virtio-net,netdev=user.1 &
+           
+         echo "opnsense_pid=$!" >> $GITHUB_ENV
+        
+        
+      - name: Build server base
+        env:
+           PACKER_LOG_PATH: logs/server-base.log
+        run: |
+           ./take_screenshots.sh logs/server-base.log server-base 60 &
+           PID=$!
+           packer build -only qemu.server vms/server/
+           kill $PID
+           
+      - name: Stop OPNSense
+        run: |
+           kill ${{ env.opnsense_pid }}
+           
         
      ############################################################################################
      #
@@ -49,7 +81,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/virtualbox' || startsWith(github.ref, 'refs/tags/') }}
         env:
            PACKER_LOG_PATH: logs/opnsense-virtualbox.log
-        run: packer build -only qemu.opnsense-virtualbox -var headless=true vms/opnsense/
+        run: packer build -only qemu.opnsense-virtualbox vms/opnsense/
         
         # TODO Test on virtualbox with virtualbox-ovf.opnsense-virtualbox-test
 
@@ -63,7 +95,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         env:
            PACKER_LOG_PATH: logs/opnsense-xen.log
-        run: packer build -only qemu.opnsense-xen -var headless=true vms/opnsense/
+        run: packer build -only qemu.opnsense-xen vms/opnsense/
            
       - name: Build XCP-NG VM
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
@@ -72,16 +104,14 @@ jobs:
         run: |
            ./take_screenshots.sh logs/xcp-ng.log xen 60 &
            PID=$!
-           packer build -only qemu.xcp-ng -var headless=true build_infrastructure
+           packer build -only qemu.xcp-ng build_infrastructure
            kill $PID
            
       - name: Start XCP-NG VM
         if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/xen' || startsWith(github.ref, 'refs/tags/') }}
         run: |
           qemu-system-x86_64 -machine type=pc,accel=kvm -cpu host -m 8192 -smp 8,sockets=2,cores=4  \
-          -object iothread,id=io1 \
-          -device virtio-blk-pci,drive=disk0,iothread=io1 \
-          -drive if=none,id=disk0,cache=none,format=qcow2,aio=threads,file=output/xcp-ng/xcp-ng \
+          -drive id=disk0,cache=writeback,format=qcow2,file=output/xcp-ng/xcp-ng \
           -netdev user,id=user.0,net=192.168.122.0/24,dhcpstart=192.168.122.9,hostfwd=tcp::0-:22,hostfwd=tcp::0-:443 \
           -device virtio-net,netdev=user.0 \
           -netdev user,id=user.1,net=10.0.0.0/8,restrict=y \
