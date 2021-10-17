@@ -52,7 +52,8 @@ jobs:
            -netdev user,id=opt,net=192.168.123.0/24 \
            -device virtio-net,netdev=opt  \
            -netdev bridge,id=user.1,br=$PKR_VAR_qemu_bridge \
-           -device virtio-net,netdev=user.1 &
+           -device virtio-net,netdev=user.1 \
+           -display none &
            
          echo "opnsense_pid=$!" >> $GITHUB_ENV
         
