@@ -66,6 +66,24 @@ jobs:
            packer build -only qemu.server vms/server/
            kill $PID
            
+      - name: Build opsi base
+        env:
+           PACKER_LOG_PATH: logs/opsi-base.log
+        run: |
+           ./take_screenshots.sh logs/opsi-base.log opsi-base 60 &
+           PID=$!
+           packer build -only qemu.opsi vms/server/
+           kill $PID
+           
+      - name: Build docker base
+        env:
+           PACKER_LOG_PATH: logs/docker-base.log
+        run: |
+           ./take_screenshots.sh logs/docker-base.log docker-base 60 &
+           PID=$!
+           packer build -only qemu.docker vms/server/
+           kill $PID
+           
       - name: Stop OPNSense
         run: |
            kill ${{ env.opnsense_pid }}
