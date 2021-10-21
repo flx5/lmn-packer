@@ -11,18 +11,24 @@ locals {
       disk_additional_size = [
         "100G"
       ]
+      qemu_import = [
+         ["-drive", "file=output/server-qemu/packer-ubuntu-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2"],
+    	["-drive", "file=output/tmp/packer-server-qemu-1,if=virtio,cache=writeback,discard=ignore,format=qcow2"]
+      ]
     }
     opsi = {
       prepare              = "linuxmuster-prepare --initial --unattended --profile=opsi "
       ip                   = "10.0.0.2"
       disk_size            = "25G"
       disk_additional_size = []
+      qemu_import = []
     }
     docker = {
       prepare              = "linuxmuster-prepare --initial --unattended --profile=docker "
       ip                   = "10.0.0.3"
       disk_size            = "25G"
       disk_additional_size = []
+      qemu_import = []
     }
 
   }
@@ -117,6 +123,11 @@ build {
       local.builds[source.name].prepare,
       "reboot"
     ]
+  }
+  
+  post-processor "checksum" {
+    checksum_types = ["sha256"]
+    output         = "output/${source.name}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
   }
 }
 
