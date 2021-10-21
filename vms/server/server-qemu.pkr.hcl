@@ -37,6 +37,8 @@ build {
 
         ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
         ["-device", "virtio-net,netdev=lan"],
+        
+        ["-drive", "file=output/${source.key}-qemu/packer-${source.key}-qemu,if=virtio,cache=writeback,discard=ignore,format=qcow2"],
       ])
 
     }

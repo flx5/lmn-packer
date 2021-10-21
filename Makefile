@@ -22,17 +22,32 @@ opnsense-start: opnsense.PID
 opnsense-stop: opnsense.PID
 	kill `cat $<` && rm $<
 	
-server-base: output/server
+
+
+
+
 	
-output/server: opnsense-start
+server-base: | output/server
+	
+output/server: | opnsense-start
 	packer build -var red_network=$(WAN) -var qemu_bridge=$(LAN) -only qemu.server vms/server/
 	
-output/server-qemu: server-base
+output/server-qemu: | server-base
 	mkdir -p output/tmp/
-	qemu-img create -f qcow2 -b $(ROOT_DIR)/output/server/packer-server-1 output/tmp/packer-server-qemu-1
+	qemu-img create -f qcow2 -b $(ROOT_DIR)/output/server/packer-server-1 output/tmp/packer-server-1
 	packer build -only qemu.server-qemu vms/server/
 
 server-qemu: output/server-qemu
+
+
+output/server-virtualbox: | server-base
+	mkdir -p output/tmp/
+	rm -f output/tmp/packer-server-1
+	qemu-img create -f qcow2 -b $(ROOT_DIR)/output/server/packer-server-1 output/tmp/packer-server-1
+	packer build -only qemu.server-virtualbox vms/server/
+
+server-virtualbox: | output/server-virtualbox
+
 
 
 opsi-base: | output/opsi
