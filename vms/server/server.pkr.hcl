@@ -78,6 +78,7 @@ build {
 
     content {
       name = source.key
+      vm_name = "packer-${source.key}"
       
       ssh_host = source.value.ip
 

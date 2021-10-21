@@ -1,5 +1,5 @@
 locals {
-   virtualbox = {
+   server-virtualbox = {
      output_dir = "output/server-virtualbox"
      ovf_template = "${path.root}/virtualbox/server-virtualbox.ovf"
    }
@@ -21,7 +21,7 @@ source "qemu" "server-virtualbox" {
 
       vm_name = "server-virtualbox"
       
-       output_directory = local.virtualbox.output_dir
+       output_directory = local.server-virtualbox.output_dir
        
    iso_url      = "output/server/packer-server"
    iso_checksum = "file:output/server/packer_server_sha256.checksum"
@@ -35,7 +35,7 @@ source "qemu" "server-virtualbox" {
         ["-netdev", "bridge,id=lan,br=${var.qemu_bridge}"],
         ["-device", "virtio-net,netdev=lan"],
         
-        ["-drive", "file=${local.virtualbox.output_dir}/server-virtualbox,if=virtio,cache=writeback,discard=ignore,format=qcow2"],
+        ["-drive", "file=${local.server-virtualbox.output_dir}/server-virtualbox,if=virtio,cache=writeback,discard=ignore,format=qcow2"],
         ["-drive", "file=output/tmp/packer-server-1,if=virtio,cache=writeback,discard=ignore,format=qcow2"],
       ]
 }
@@ -54,33 +54,32 @@ build {
 
   post-processors {
     post-processor "shell-local" {
-      inline = ["qemu-img convert -f qcow2 -O vmdk ${local.virtualbox.output_dir}/${source.name} ${local.virtualbox.output_dir}/server-virtualbox.vmdk"]
+      inline = ["qemu-img convert -f qcow2 -O vmdk ${local.server-virtualbox.output_dir}/${source.name} ${local.server-virtualbox.output_dir}/server-virtualbox.vmdk"]
     }
 
     post-processor "shell-local" {
-      only   = ["qemu.server-virtualbox"]
-      inline = ["qemu-img convert -f qcow2 -O vmdk output/tmp/packer-server-1 ${local.virtualbox.output_dir}/server-virtualbox-1.vmdk"]
+      inline = ["qemu-img convert -f qcow2 -O vmdk output/tmp/packer-server-1 ${local.server-virtualbox.output_dir}/server-virtualbox-1.vmdk"]
     }
 
     post-processor "artifice" {
       files = [
-        "${local.virtualbox.output_dir}/${source.name}.vmdk",
-        "${local.virtualbox.output_dir}/${source.name}-1.vmdk"
+        "${local.server-virtualbox.output_dir}/${source.name}.vmdk",
+        "${local.server-virtualbox.output_dir}/${source.name}-1.vmdk"
       ]
     }
     
     post-processor "shell-local" {
       inline = [
         "python3 tools/scripts/convert.py \\",
-        "-d ${local.virtualbox.output_dir}/${source.name}.vmdk ${local.virtualbox.output_dir}/server-virtualbox-1.vmdk \\",
-        "-t '${local.virtualbox.ovf_template}' \\",
-        "-o ${local.virtualbox.output_dir}/packer-server-virtualbox.ovf"
+        "-d ${local.server-virtualbox.output_dir}/${source.name}.vmdk ${local.server-virtualbox.output_dir}/server-virtualbox-1.vmdk \\",
+        "-t '${local.server-virtualbox.ovf_template}' \\",
+        "-o ${local.server-virtualbox.output_dir}/packer-server-virtualbox.ovf"
       ]
     }
 
     post-processor "checksum" {
       checksum_types = ["sha256"]
-      output         = "${local.virtualbox.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
+      output         = "${local.server-virtualbox.output_dir}/packer_{{.BuildName}}_{{.ChecksumType}}.checksum"
     }
   }
 }

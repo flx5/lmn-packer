@@ -59,3 +59,8 @@ output/opsi-qemu: | output/opsi
 	packer build -only qemu.opsi-qemu vms/server/
 
 opsi-qemu: output/opsi-qemu
+
+output/opsi-virtualbox: | output/opsi
+	packer build -only qemu.opsi-virtualbox vms/server/
+
+opsi-virtualbox: output/opsi-virtualbox
